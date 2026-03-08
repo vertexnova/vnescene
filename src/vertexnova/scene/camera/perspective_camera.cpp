@@ -26,7 +26,7 @@ PerspectiveCamera::PerspectiveCamera(
     , aspect_ratio_(aspect_ratio)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    updateMatrices();
+    PerspectiveCamera::updateMatrices();
 }
 
 PerspectiveCamera::PerspectiveCamera(
@@ -38,7 +38,7 @@ PerspectiveCamera::PerspectiveCamera(
     , far_plane_(far_plane)
     , width_(width)
     , height_(height) {
-    updateMatrices();
+    PerspectiveCamera::updateMatrices();
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {

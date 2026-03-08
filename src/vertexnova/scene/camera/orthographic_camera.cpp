@@ -28,7 +28,7 @@ OrthographicCamera::OrthographicCamera(
     , top_(top)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    updateMatrices();
+    OrthographicCamera::updateMatrices();
 }
 
 OrthographicCamera::OrthographicCamera(
@@ -40,7 +40,7 @@ OrthographicCamera::OrthographicCamera(
     , top_(height * 0.5f)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    updateMatrices();
+    OrthographicCamera::updateMatrices();
 }
 
 Vec3f OrthographicCamera::getPosition() const noexcept {
