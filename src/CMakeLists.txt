@@ -65,6 +65,8 @@ target_link_libraries(vnescene
         vne::scene::Warnings
         vne::scene::BuildSettings
         vne::math
+    PRIVATE
+        Threads::Threads
 )
 
 if(TARGET vne::common)

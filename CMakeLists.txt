@@ -29,6 +29,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Threading library (required for Android NDK and others; use Threads::Threads instead of -lpthread)
+find_package(Threads REQUIRED)
+
 # CMake modules from vnecmake submodule (cmake/vnecmake)
 set(VNE_DEPS_INTERNAL_DIR ${PROJECT_SOURCE_DIR}/deps/internal)
 set(VNE_DEPS_EXTERNAL_DIR ${PROJECT_SOURCE_DIR}/deps/external)
