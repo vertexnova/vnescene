@@ -7,19 +7,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/vertexnova/vnetemplate/actions/workflows/ci.yml">
-    <img src="https://github.com/vertexnova/vnetemplate/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"/>
+  <a href="https://github.com/vertexnova/vnescene/actions/workflows/ci.yml">
+    <img src="https://github.com/vertexnova/vnescene/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"/>
   </a>
   <img src="https://img.shields.io/badge/C%2B%2B-20-blue.svg" alt="C++ Standard"/>
-  <a href="https://codecov.io/gh/vertexnova/vnetemplate">
-    <img src="https://codecov.io/gh/vertexnova/vnetemplate/branch/main/graph/badge.svg" alt="Coverage"/>
+  <a href="https://codecov.io/gh/vertexnova/vnescene">
+    <img src="https://codecov.io/gh/vertexnova/vnescene/branch/main/graph/badge.svg" alt="Coverage"/>
   </a>
   <img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"/>
 </p>
 
 ---
 
-# VneTemplate
+# VneScene
 
 Minimal VertexNova-standard C++ template: CMake, deps (external + internal), tests, examples, and documentation. Use it as a starting point for new libraries or apps in the [VertexNova](https://github.com/vertexnova) stack.
 
@@ -62,11 +62,11 @@ Builds use **`build/static`** or **`build/shared`** (one library type per direct
 
 ```bash
 # Shared library (default)
-cmake -B build/shared -DCMAKE_BUILD_TYPE=Debug -DVNE_TEMPLATE_TESTS=ON
+cmake -B build/shared -DCMAKE_BUILD_TYPE=Debug -DVNE_SCENE_TESTS=ON
 cmake --build build/shared
 
 # Static library
-cmake -B build/static -DCMAKE_BUILD_TYPE=Debug -DVNE_TEMPLATE_LIB_TYPE=static -DVNE_TEMPLATE_TESTS=ON
+cmake -B build/static -DCMAKE_BUILD_TYPE=Debug -DVNE_SCENE_LIB_TYPE=static -DVNE_SCENE_TESTS=ON
 cmake --build build/static
 ```
 
@@ -108,7 +108,7 @@ Or:
 
   ```bash
   cmake -B build/shared -DENABLE_DOXYGEN=ON
-  cmake --build build/shared --target vnetemplate_doc_doxygen
+  cmake --build build/shared --target vnescene_doc_doxygen
   ```
 
   Output: `build/shared/docs/html/index.html`.

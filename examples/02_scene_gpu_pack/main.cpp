@@ -1,0 +1,47 @@
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   February 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+#include "common/logging_guard.h"
+#include "vertexnova/scene/scene.h"
+#include <memory>
+
+int main() {
+    vne::scene::examples::LoggingGuard logging_guard;
+
+    using namespace vne::scene;
+    using namespace vne::math;
+
+    SceneState state;
+
+    auto cam = CameraFactory::createPerspective(PerspectiveCameraParameters(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f));
+    cam->setPosition(Vec3f(0.0f, 2.0f, 5.0f));
+    cam->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam->resize(800.0f, 600.0f);
+    cam->updateMatrices();
+    state.setActiveCamera(cam);
+
+    state.addLight(std::make_shared<AmbientLight>(Vec3f(0.3f, 0.3f, 0.4f), 0.2f));
+    state.addLight(
+        std::make_shared<DirectionalLight>(Vec3f(0.5f, -1.0f, 0.3f), Vec3f(1.0f, 0.98f, 0.95f), 1.0f, "Sun"));
+    state.addLight(
+        std::make_shared<PointLight>(Vec3f(2.0f, 1.0f, 2.0f), Vec3f(1.0f, 0.9f, 0.8f), 1.0f, 20.0f, "Point"));
+
+    CameraGpu cam_gpu = state.getActiveCamera()->toGpu();
+    VNE_LOG_INFO << "Camera GPU packed: position_near.w (near) = " << cam_gpu.position_near.w
+                 << ", far_viewport.x (far) = " << cam_gpu.far_viewport.x;
+
+    for (size_t i = 0; i < state.getLightCount(); ++i) {
+        LightGpu light_gpu = packLightGpu(*state.getLights()[i]);
+        VNE_LOG_INFO << "Light " << i << " GPU: color_intensity.w (intensity) = " << light_gpu.color_intensity.w;
+    }
+
+    return 0;
+}

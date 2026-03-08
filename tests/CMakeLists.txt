@@ -8,7 +8,7 @@
 # Autodoc:   yes
 #==============================================================================
 
-if(NOT TARGET vnetemplate)
+if(NOT TARGET vnescene)
     return()
 endif()
 
@@ -48,25 +48,39 @@ endif()
 # Test sources
 #==============================================================================
 set(TEST_SOURCES
-    template_test.cpp
+    environment_test.cpp
+    scene_state_test.cpp
+    handle_test.cpp
+    camera_utils_test.cpp
+    camera_transform_adapter_test.cpp
+    camera_gpu_test.cpp
+    camera_graphics_api_test.cpp
+    light_gpu_test.cpp
+    light_shadow_test.cpp
 )
 
 #==============================================================================
 # Build test executable
 #==============================================================================
-add_executable(vnetemplate_tests ${TEST_SOURCES})
+add_executable(vnescene_tests ${TEST_SOURCES})
 
-target_include_directories(vnetemplate_tests
+target_include_directories(vnescene_tests
     PRIVATE
         ${GTEST_INCLUDE_DIRS}
         ${VNE_INCLUDE_DIR}
         ${VNE_SRC_DIR}
 )
 
-target_link_libraries(vnetemplate_tests
+target_link_libraries(vnescene_tests
     PRIVATE
         ${GTEST_LIBRARIES}
-        vne::template
+        vne::scene
 )
 
-add_test(NAME vnetemplate_tests COMMAND vnetemplate_tests)
+# Suppress C4251 when tests include vnescene DLL headers: exported classes have members
+# (std::string, Vec3f, Mat4f, shared_ptr, vector) that are not exported from the DLL.
+if(MSVC)
+    target_compile_options(vnescene_tests PRIVATE /wd4251)
+endif()
+
+add_test(NAME vnescene_tests COMMAND vnescene_tests)

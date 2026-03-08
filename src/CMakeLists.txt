@@ -9,54 +9,88 @@
 #==============================================================================
 
 set(SOURCE_FILES
-    vertexnova/template/template.cpp
+    vertexnova/scene/camera/perspective_camera.cpp
+    vertexnova/scene/camera/orthographic_camera.cpp
+    vertexnova/scene/camera/camera_factory.cpp
+    vertexnova/scene/camera/camera_utils.cpp
+    vertexnova/scene/camera/camera_gpu.cpp
+    vertexnova/scene/scene_state.cpp
+    vertexnova/scene/light/ambient_light.cpp
+    vertexnova/scene/light/directional_light.cpp
+    vertexnova/scene/light/point_light.cpp
+    vertexnova/scene/light/spot_light.cpp
 )
 
 set(HEADER_FILES
-    ${VNE_INCLUDE_DIR}/vertexnova/template/template.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/export.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/scene.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/handle.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/scene_state.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/environment.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/gpu_types.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_types.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_utils.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_factory.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_gpu.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_transform_adapter.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/perspective_camera.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/orthographic_camera.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/light.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/light_gpu.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/ambient_light.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/directional_light.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/point_light.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/light/spot_light.h
 )
 
-# One library per build: static or shared, always named vnetemplate (alias vne::template).
-if(VNE_TEMPLATE_LIB_TYPE STREQUAL "shared")
+# One library per build: static or shared, always named vnescene (alias vne::scene).
+if(VNE_SCENE_LIB_TYPE STREQUAL "shared")
     set(_lib_type SHARED)
 else()
     set(_lib_type STATIC)
 endif()
 
-add_library(vnetemplate ${_lib_type} ${SOURCE_FILES} ${HEADER_FILES})
+add_library(vnescene ${_lib_type} ${SOURCE_FILES} ${HEADER_FILES})
 
-target_include_directories(vnetemplate
+target_include_directories(vnescene
     PUBLIC
         $<BUILD_INTERFACE:${VNE_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${VNE_SRC_DIR}>
         $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(vnetemplate
+target_link_libraries(vnescene
     PUBLIC
-        vne::template::Warnings
-        vne::template::BuildSettings
+        vne::scene::Warnings
+        vne::scene::BuildSettings
+        vne::math
+    PRIVATE
+        Threads::Threads
 )
 
 if(TARGET vne::common)
-    target_link_libraries(vnetemplate PUBLIC vne::common)
+    target_link_libraries(vnescene PUBLIC vne::common)
 endif()
 if(TARGET vne::logging)
-    target_link_libraries(vnetemplate PUBLIC vne::logging)
+    target_link_libraries(vnescene PUBLIC vne::logging)
 endif()
 
-target_compile_features(vnetemplate PUBLIC cxx_std_20)
+target_compile_features(vnescene PUBLIC cxx_std_20)
 
-# Set export/import defines for shared builds. The header uses them only on Windows
-# (VNE_TEMPLATE_API becomes __declspec(dllexport)/dllimport); on other platforms they are no-ops.
+# Set export/import defines for shared builds. Headers use VNE_SCENE_API (dllexport/dllimport on Windows).
 if(_lib_type STREQUAL "SHARED")
-    target_compile_definitions(vnetemplate
-        PRIVATE VNE_TEMPLATE_BUILDING_DLL
-        INTERFACE VNE_TEMPLATE_DLL
+    target_compile_definitions(vnescene
+        PRIVATE VNE_SCENE_BUILDING_DLL
+        INTERFACE VNE_SCENE_DLL
     )
+    # C4251: non-exported types (vnemath Vec/Mat, std::string, etc.) in exported class members; expected for DLL.
+    if(MSVC)
+        target_compile_options(vnescene PRIVATE /wd4251)
+    endif()
 endif()
 
-add_library(vne::template ALIAS vnetemplate)
+add_library(vne::scene ALIAS vnescene)
 
 source_group("Sources" FILES ${SOURCE_FILES})
 source_group(TREE ${VNE_INCLUDE_DIR} PREFIX "Headers" FILES ${HEADER_FILES})
