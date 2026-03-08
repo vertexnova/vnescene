@@ -79,7 +79,7 @@ jobs:
   #   vnescene-vX.Y.Z-{platform}.tar.gz
   #
   # Contents: one library per build in lib/ (static or shared via VNE_SCENE_LIB_TYPE;
-  #           e.g. libvnescene.so or libvnescene.a on Unix), include/vertexnova/template/
+  #           e.g. libvnescene.so or libvnescene.a on Unix), include/vertexnova/scene/
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
