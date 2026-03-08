@@ -135,14 +135,23 @@ TEST(CameraUtils, FitToAABB_ProjectsInsideNDC) {
     Aabb aabb = Aabb::fromCenterAndHalfExtents(Vec3f(0.0f, 0.0f, 0.0f), Vec3f(2.0f, 2.0f, 2.0f));
     fitToAabb(*cam, aabb, 1.1f);
 
-    Vec3f center = aabb.center();
-    Vec3f proj = project(*cam, center, 800.0f, 600.0f);
-    float ndcX = (proj.x() / 800.0f) * 2.0f - 1.0f;
-    float ndcY = (proj.y() / 600.0f) * 2.0f - 1.0f;
-    EXPECT_GE(ndcX, -1.1f);
-    EXPECT_LE(ndcX, 1.1f);
-    EXPECT_GE(ndcY, -1.1f);
-    EXPECT_LE(ndcY, 1.1f);
+    const float viewport_w = 800.0f;
+    const float viewport_h = 600.0f;
+    const float ndc_tolerance = 0.02f;  // Allow small margin for floating point
+    const float ndc_min = -1.0f - ndc_tolerance;
+    const float ndc_max = 1.0f + ndc_tolerance;
+
+    // Project all 8 AABB corners and verify each falls within NDC [-1, 1] x [-1, 1]
+    for (unsigned int i = 0; i < 8; ++i) {
+        Vec3f corner = aabb.corner(static_cast<uint32_t>(i));
+        Vec3f screen = project(*cam, corner, viewport_w, viewport_h);
+        float ndc_x = (screen.x() / viewport_w) * 2.0f - 1.0f;
+        float ndc_y = (screen.y() / viewport_h) * 2.0f - 1.0f;
+        EXPECT_GE(ndc_x, ndc_min) << "Corner " << i << " NDC x " << ndc_x << " below -1";
+        EXPECT_LE(ndc_x, ndc_max) << "Corner " << i << " NDC x " << ndc_x << " above 1";
+        EXPECT_GE(ndc_y, ndc_min) << "Corner " << i << " NDC y " << ndc_y << " below -1";
+        EXPECT_LE(ndc_y, ndc_max) << "Corner " << i << " NDC y " << ndc_y << " above 1";
+    }
 }
 
 TEST(CameraUtils, FitToAABB_MonotonicDistance) {
