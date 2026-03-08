@@ -77,4 +77,10 @@ target_link_libraries(vnescene_tests
         vne::scene
 )
 
+# Suppress C4251 when tests include vnescene DLL headers: exported classes have members
+# (std::string, Vec3f, Mat4f, shared_ptr, vector) that are not exported from the DLL.
+if(MSVC)
+    target_compile_options(vnescene_tests PRIVATE /wd4251)
+endif()
+
 add_test(NAME vnescene_tests COMMAND vnescene_tests)
