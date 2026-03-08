@@ -363,13 +363,14 @@ endif()
 # Use COMPONENT vnescene so that `cmake --install . --component vnescene`
 # installs only this library — not the internal deps (vnecommon, vnelogging)
 # which register their own install() rules via add_subdirectory.
+#
+# Note: find_package(VneScene) uses FindVneScene.cmake (MODULE mode).
+# Set CMAKE_PREFIX_PATH to the install prefix, and CMAKE_MODULE_PATH to
+# include ${CMAKE_INSTALL_PREFIX}/lib/cmake/VneScene for discovery.
 #==============================================================================
 include(GNUInstallDirs)
 
-set(VneScene_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/VneScene)
-
 install(TARGETS vnescene SceneWarnings SceneBuildSettings
-    EXPORT VneSceneTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -385,19 +386,7 @@ install(DIRECTORY src/vertexnova/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertex
 install(FILES ${CMAKE_BINARY_DIR}/config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova/scene
     COMPONENT vnescene)
 
-install(EXPORT VneSceneTargets
-    FILE VneSceneTargets.cmake
-    NAMESPACE vne::
-    DESTINATION ${VneScene_CMAKE_DIR}
-    COMPONENT vnescene
-)
-
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/VneSceneConfig.cmake.in
-    ${CMAKE_BINARY_DIR}/VneSceneConfig.cmake
-    @ONLY
-)
-install(FILES ${CMAKE_BINARY_DIR}/VneSceneConfig.cmake
-    DESTINATION ${VneScene_CMAKE_DIR}
+install(FILES cmake/FindVneScene.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/VneScene
     COMPONENT vnescene
 )

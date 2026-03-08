@@ -79,12 +79,15 @@ cmake --build build
 sudo cmake --install build
 ```
 
-In your `CMakeLists.txt`:
+In your `CMakeLists.txt` (ensure [vnemath](https://github.com/vertexnova/vnemath) is installed first):
 
 ```cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/lib/cmake/VneScene")
 find_package(VneScene REQUIRED)
 target_link_libraries(your_target PRIVATE vne::scene)
 ```
+
+Configure with `-DCMAKE_PREFIX_PATH=/usr/local` (or your install prefix) so the Find module is discovered.
 
 ## Building
 
