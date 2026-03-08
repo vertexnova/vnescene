@@ -4,7 +4,7 @@
 
 add_executable(example_06_shadow_settings main.cpp)
 
-target_link_libraries(example_06_shadow_settings PRIVATE vne::scene vne::logging)
+target_link_libraries(example_06_shadow_settings PRIVATE vne::scene)
 
 target_include_directories(example_06_shadow_settings PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

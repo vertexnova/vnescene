@@ -4,7 +4,7 @@
 
 add_executable(example_01_basic main.cpp)
 
-target_link_libraries(example_01_basic PRIVATE vne::scene vne::logging)
+target_link_libraries(example_01_basic PRIVATE vne::scene)
 
 target_include_directories(example_01_basic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

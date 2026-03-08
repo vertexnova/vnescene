@@ -4,7 +4,7 @@
 
 add_executable(example_02_scene_gpu_pack main.cpp)
 
-target_link_libraries(example_02_scene_gpu_pack PRIVATE vne::scene vne::logging)
+target_link_libraries(example_02_scene_gpu_pack PRIVATE vne::scene)
 
 target_include_directories(example_02_scene_gpu_pack PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

@@ -4,7 +4,7 @@
 
 add_executable(example_05_screen_ray main.cpp)
 
-target_link_libraries(example_05_screen_ray PRIVATE vne::scene vne::logging)
+target_link_libraries(example_05_screen_ray PRIVATE vne::scene)
 
 target_include_directories(example_05_screen_ray PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

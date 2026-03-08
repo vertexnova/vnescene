@@ -4,7 +4,7 @@
 
 add_executable(example_07_camera_transform_sync main.cpp)
 
-target_link_libraries(example_07_camera_transform_sync PRIVATE vne::scene vne::logging)
+target_link_libraries(example_07_camera_transform_sync PRIVATE vne::scene)
 
 target_include_directories(example_07_camera_transform_sync PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
