@@ -76,7 +76,7 @@ class VNE_SCENE_API SpotLight : public ILight {
     /** @brief Set light name. */
     void setName(const std::string& name) noexcept override { name_ = name; }
     /** @brief No-op for spot light. */
-    void update(double) noexcept override {}
+    void update([[maybe_unused]] double delta_time) noexcept override {}
     /** @brief Pack as LightGpu for GPU (type = Spot). */
     [[nodiscard]] LightGpu toGpu() const noexcept override;
 

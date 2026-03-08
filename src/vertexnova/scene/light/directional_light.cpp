@@ -52,7 +52,7 @@ void DirectionalLight::setIntensity(float intensity) noexcept {
 Vec3f DirectionalLight::getPosition() const noexcept {
     return Vec3f(0.0f, 0.0f, 0.0f);
 }
-void DirectionalLight::setPosition(const Vec3f&) noexcept {}
+void DirectionalLight::setPosition([[maybe_unused]] const Vec3f& position) noexcept {}
 Vec3f DirectionalLight::getDirection() const noexcept {
     return direction_;
 }
@@ -71,7 +71,7 @@ const std::string& DirectionalLight::getName() const noexcept {
 void DirectionalLight::setName(const std::string& name) noexcept {
     name_ = name;
 }
-void DirectionalLight::update(double) noexcept {}
+void DirectionalLight::update([[maybe_unused]] double delta_time) noexcept {}
 
 LightGpu DirectionalLight::toGpu() const noexcept {
     LightGpu out{};

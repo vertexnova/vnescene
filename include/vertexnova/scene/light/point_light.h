@@ -62,7 +62,7 @@ class VNE_SCENE_API PointLight : public ILight {
         return vne::math::Vec3f(0.0f, -1.0f, 0.0f);
     }
     /** @brief No-op for point light. */
-    void setDirection(const vne::math::Vec3f&) noexcept override {}
+    void setDirection([[maybe_unused]] const vne::math::Vec3f& direction) noexcept override {}
     /** @brief Whether the light is enabled. */
     [[nodiscard]] bool isEnabled() const noexcept override { return enabled_; }
     /** @brief Set enabled state. */
@@ -72,7 +72,7 @@ class VNE_SCENE_API PointLight : public ILight {
     /** @brief Set light name. */
     void setName(const std::string& name) noexcept override { name_ = name; }
     /** @brief No-op for point light. */
-    void update(double) noexcept override {}
+    void update([[maybe_unused]] double delta_time) noexcept override {}
     /** @brief Pack as LightGpu for GPU (type = Point). */
     [[nodiscard]] LightGpu toGpu() const noexcept override;
 

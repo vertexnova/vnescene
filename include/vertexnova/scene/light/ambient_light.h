@@ -50,13 +50,13 @@ class VNE_SCENE_API AmbientLight : public ILight {
     /** @brief Ambient has no position; returns (0,0,0). */
     [[nodiscard]] vne::math::Vec3f getPosition() const noexcept override { return vne::math::Vec3f(0.0f, 0.0f, 0.0f); }
     /** @brief No-op for ambient. */
-    void setPosition(const vne::math::Vec3f&) noexcept override {}
+    void setPosition([[maybe_unused]] const vne::math::Vec3f& position) noexcept override {}
     /** @brief Ambient has no direction; returns (0,-1,0). */
     [[nodiscard]] vne::math::Vec3f getDirection() const noexcept override {
         return vne::math::Vec3f(0.0f, -1.0f, 0.0f);
     }
     /** @brief No-op for ambient. */
-    void setDirection(const vne::math::Vec3f&) noexcept override {}
+    void setDirection([[maybe_unused]] const vne::math::Vec3f& direction) noexcept override {}
     /** @brief Whether the light is enabled. */
     [[nodiscard]] bool isEnabled() const noexcept override { return enabled_; }
     /** @brief Set enabled state. */
@@ -66,7 +66,7 @@ class VNE_SCENE_API AmbientLight : public ILight {
     /** @brief Set light name. */
     void setName(const std::string& name) noexcept override { name_ = name; }
     /** @brief No-op for ambient. */
-    void update(double) noexcept override {}
+    void update([[maybe_unused]] double delta_time) noexcept override {}
     /** @brief Pack as LightGpu for GPU (type = Ambient). */
     [[nodiscard]] LightGpu toGpu() const noexcept override;
 
