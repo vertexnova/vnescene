@@ -292,6 +292,7 @@ jobs:
         with:
           token: ${{ secrets.codecov_token }}
           files: ./coverage.info
+          slug: vertexnova/vnescene
           fail_ci_if_error: false
           verbose: true
           flags: ${{ inputs.platform }}

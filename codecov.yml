@@ -1,0 +1,31 @@
+# Codecov configuration for vnescene
+# https://docs.codecov.io/docs/codecovyml-reference
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 20%
+    patch:
+      default:
+        target: 80%
+        threshold: 20%
+
+ignore:
+  - "tests/**/*"
+  - "*_test.cpp"
+  - "deps/**/*"
+  - "examples/**/*"
+  - "_deps/**/*"
+  - "cmake/**/*"
+  - "scripts/**/*"
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true
