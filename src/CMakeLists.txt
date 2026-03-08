@@ -82,6 +82,10 @@ if(_lib_type STREQUAL "SHARED")
         PRIVATE VNE_SCENE_BUILDING_DLL
         INTERFACE VNE_SCENE_DLL
     )
+    # C4251: non-exported types (vnemath Vec/Mat, std::string, etc.) in exported class members; expected for DLL.
+    if(MSVC)
+        target_compile_options(vnescene PRIVATE /wd4251)
+    endif()
 endif()
 
 add_library(vne::scene ALIAS vnescene)
