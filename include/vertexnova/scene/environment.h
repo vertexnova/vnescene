@@ -18,6 +18,7 @@
  * HDRI is an asset id/handle for the application to resolve.
  */
 
+#include "vertexnova/scene/export.h"
 #include <vertexnova/math/core/core.h>
 #include <string>
 
@@ -27,7 +28,7 @@ namespace vne::scene {
  * @struct Environment
  * @brief Data-only environment settings for rendering.
  */
-struct Environment {
+struct VNE_SCENE_API Environment {
     float exposure = 1.0f;                            //!< Exposure (linear scale).
     float gamma = 2.2f;                               //!< Gamma for tone mapping / output.
     vne::math::Vec3f clear_color{0.1f, 0.1f, 0.15f};  //!< Background/clear color (RGB).

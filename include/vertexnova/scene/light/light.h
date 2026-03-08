@@ -42,7 +42,7 @@ enum class ShadowFilter : uint8_t {
  * @struct ShadowCascadeSettings
  * @brief Directional-light cascade configuration (data-only).
  */
-struct ShadowCascadeSettings {
+struct VNE_SCENE_API ShadowCascadeSettings {
     uint8_t num_cascades{0};    //!< 0 means "no cascades" (or shadows disabled).
     float split_lambda{0.5f};   //!< 0..1, practical default.
     float max_distance{50.0f};  //!< Max shadow distance in world units.
@@ -53,7 +53,7 @@ struct ShadowCascadeSettings {
  * @struct ShadowSettings
  * @brief Data-only shadow parameters for a light. No GPU resources here.
  */
-struct ShadowSettings {
+struct VNE_SCENE_API ShadowSettings {
     bool enabled{false};        //!< Whether this light casts shadows.
     uint32_t resolution{1024};  //!< Shadow map resolution (renderer may clamp to pow2).
     ShadowFilter filter{ShadowFilter::ePCF};
