@@ -40,7 +40,7 @@ class VNE_SCENE_API PointLight : public ILight {
                const vne::math::Vec3f& color,
                float intensity,
                float range,
-               const std::string& name = "PointLight");
+               std::string name = "PointLight");
     ~PointLight() noexcept override = default;
 
     /** @brief Returns LightType::ePoint. */

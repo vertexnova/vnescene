@@ -43,7 +43,7 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera {
                       float aspect_ratio,
                       float near_plane,
                       float far_plane,
-                      const std::string& name = "PerspectiveCamera");
+                      std::string name = "PerspectiveCamera");
     /**
      * @brief Construct from FOV and viewport size (aspect computed).
      * @param fov Field of view in degrees.
@@ -58,7 +58,7 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera {
                       float height,
                       float near_plane,
                       float far_plane,
-                      const std::string& name = "PerspectiveCamera");
+                      std::string name = "PerspectiveCamera");
     ~PerspectiveCamera() noexcept override = default;
 
     /** @brief Get camera position in world space. */
@@ -146,6 +146,11 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera {
                 const vne::math::Vec3f& up = vne::math::Vec3f(0.0f, 1.0f, 0.0f)) noexcept;
 
    private:
+    /** @brief Non-virtual implementation to avoid virtual call during construction. */
+    void updateViewMatrixImpl() noexcept;
+    /** @brief Non-virtual implementation to avoid virtual call during construction. */
+    void updateProjectionMatrixImpl() noexcept;
+
     vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};  //!< Camera position in world space.
     vne::math::Vec3f target_{0.0f, 0.0f, -1.0f};   //!< Look-at target point.
     vne::math::Vec3f up_{0.0f, 1.0f, 0.0f};        //!< Up vector for view orientation.

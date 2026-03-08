@@ -22,16 +22,16 @@ using namespace vne::math;
 static Vec3f normalizeSafe(const Vec3f& v) noexcept {
     float len = v.length();
     if (len <= kFloatEpsilon) {
-        return Vec3f(0.0f, -1.0f, 0.0f);
+        return {0.0f, -1.0f, 0.0f};
     }
     return v / len;
 }
 
-DirectionalLight::DirectionalLight(const Vec3f& direction, const Vec3f& color, float intensity, const std::string& name)
+DirectionalLight::DirectionalLight(const Vec3f& direction, const Vec3f& color, float intensity, std::string name)
     : direction_(normalizeSafe(direction))
     , color_(color)
     , intensity_(intensity)
-    , name_(name)
+    , name_(std::move(name))
     , enabled_(true) {}
 
 LightType DirectionalLight::getLightType() const noexcept {
@@ -50,7 +50,7 @@ void DirectionalLight::setIntensity(float intensity) noexcept {
     intensity_ = std::max(0.0f, intensity);
 }
 Vec3f DirectionalLight::getPosition() const noexcept {
-    return Vec3f(0.0f, 0.0f, 0.0f);
+    return {0.0f, 0.0f, 0.0f};
 }
 void DirectionalLight::setPosition([[maybe_unused]] const Vec3f& position) noexcept {}
 Vec3f DirectionalLight::getDirection() const noexcept {
@@ -87,8 +87,9 @@ void DirectionalLight::setShadowCasting(bool shadow_casting) noexcept {
 }
 void DirectionalLight::setShadowMapSize(uint32_t size) noexcept {
     // Round up to next power of 2; cap at 2^31 to avoid overflow in the shift loop.
+    constexpr unsigned int kMaxShadowResolutionShift = 31;
     uint32_t p2 = 1;
-    while (p2 < size && p2 < (1u << 31))
+    while (p2 < size && p2 < (1u << kMaxShadowResolutionShift))
         p2 <<= 1;
     shadow_.resolution = p2;
 }
@@ -96,7 +97,8 @@ void DirectionalLight::setShadowBias(float bias) noexcept {
     shadow_.bias = std::max(0.0f, bias);
 }
 void DirectionalLight::setShadowFarPlane(float far_plane) noexcept {
-    shadow_.far_plane = std::max(0.1f, far_plane);
+    constexpr float kMinShadowFarPlane = 0.1f;
+    shadow_.far_plane = std::max(kMinShadowFarPlane, far_plane);
 }
 
 }  // namespace vne::scene

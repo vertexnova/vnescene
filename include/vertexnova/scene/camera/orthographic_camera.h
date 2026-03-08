@@ -47,7 +47,7 @@ class VNE_SCENE_API OrthographicCamera : public ICamera {
                        float top,
                        float near_plane,
                        float far_plane,
-                       const std::string& name = "OrthographicCamera");
+                       std::string name = "OrthographicCamera");
     /**
      * @brief Construct centered orthographic camera from viewport size.
      * @param width Viewport width; bounds are (-width/2, width/2) horizontally.
@@ -57,7 +57,7 @@ class VNE_SCENE_API OrthographicCamera : public ICamera {
      * @param name Camera name.
      */
     OrthographicCamera(
-        float width, float height, float near_plane, float far_plane, const std::string& name = "OrthographicCamera");
+        float width, float height, float near_plane, float far_plane, std::string name = "OrthographicCamera");
     ~OrthographicCamera() noexcept override = default;
 
     /** @brief Get camera position in world space. */
@@ -137,6 +137,11 @@ class VNE_SCENE_API OrthographicCamera : public ICamera {
     [[nodiscard]] CameraGpu toGpu() const noexcept override;
 
    private:
+    /** @brief Non-virtual implementation to avoid virtual call during construction. */
+    void updateViewMatrixImpl() noexcept;
+    /** @brief Non-virtual implementation to avoid virtual call during construction. */
+    void updateProjectionMatrixImpl() noexcept;
+
     vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};  //!< Camera position in world space.
     vne::math::Vec3f target_{0.0f, 0.0f, -1.0f};   //!< Look-at target point.
     vne::math::Vec3f up_{0.0f, 1.0f, 0.0f};        //!< Up vector for view orientation.

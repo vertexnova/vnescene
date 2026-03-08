@@ -19,28 +19,40 @@ namespace vne::scene {
 
 using namespace vne::math;
 
+namespace {
+
+constexpr float kHalf = 0.5f;
+constexpr float kMinNearPlane = 0.001f;
+constexpr float kMinFarPlaneOffset = 0.1f;
+
+}  // namespace
+
 OrthographicCamera::OrthographicCamera(
-    float left, float right, float bottom, float top, float near_plane, float far_plane, const std::string& name)
-    : name_(name)
+    float left, float right, float bottom, float top, float near_plane, float far_plane, std::string name)
+    : name_(std::move(name))
     , left_(left)
     , right_(right)
     , bottom_(bottom)
     , top_(top)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    OrthographicCamera::updateMatrices();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 OrthographicCamera::OrthographicCamera(
-    float width, float height, float near_plane, float far_plane, const std::string& name)
-    : name_(name)
-    , left_(-width * 0.5f)
-    , right_(width * 0.5f)
-    , bottom_(-height * 0.5f)
-    , top_(height * 0.5f)
+    float width, float height, float near_plane, float far_plane, std::string name)
+    : name_(std::move(name))
+    , left_(-width * kHalf)
+    , right_(width * kHalf)
+    , bottom_(-height * kHalf)
+    , top_(height * kHalf)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    OrthographicCamera::updateMatrices();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 Vec3f OrthographicCamera::getPosition() const noexcept {
@@ -77,9 +89,13 @@ Mat4f OrthographicCamera::getViewMatrix() const noexcept {
     return view_matrix_;
 }
 
-void OrthographicCamera::updateViewMatrix() noexcept {
+void OrthographicCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = Mat4f::lookAt(position_, target_, up_, graphics_api_);
     view_matrix_dirty_ = false;
+}
+
+void OrthographicCamera::updateViewMatrix() noexcept {
+    updateViewMatrixImpl();
 }
 
 Mat4f OrthographicCamera::getProjectionMatrix() const noexcept {
@@ -89,9 +105,13 @@ Mat4f OrthographicCamera::getProjectionMatrix() const noexcept {
     return projection_matrix_;
 }
 
-void OrthographicCamera::updateProjectionMatrix() noexcept {
+void OrthographicCamera::updateProjectionMatrixImpl() noexcept {
     projection_matrix_ = Mat4f::ortho(left_, right_, bottom_, top_, near_plane_, far_plane_, graphics_api_);
     projection_matrix_dirty_ = false;
+}
+
+void OrthographicCamera::updateProjectionMatrix() noexcept {
+    updateProjectionMatrixImpl();
 }
 void OrthographicCamera::setGraphicsApi(GraphicsApi api) noexcept {
     if (graphics_api_ != api) {
@@ -108,8 +128,8 @@ Mat4f OrthographicCamera::getViewProjectionMatrix() const noexcept {
 }
 
 void OrthographicCamera::updateMatrices() noexcept {
-    updateViewMatrix();
-    updateProjectionMatrix();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
@@ -149,7 +169,7 @@ void OrthographicCamera::setTop(float top) noexcept {
 }
 
 void OrthographicCamera::setNearPlane(float near_plane) noexcept {
-    near_plane_ = std::max(0.001f, near_plane);
+    near_plane_ = std::max(kMinNearPlane, near_plane);
     if (near_plane_ >= far_plane_) {
         far_plane_ = near_plane_ + 1.0f;
     }
@@ -157,7 +177,7 @@ void OrthographicCamera::setNearPlane(float near_plane) noexcept {
 }
 
 void OrthographicCamera::setFarPlane(float far_plane) noexcept {
-    far_plane_ = std::max(near_plane_ + 0.1f, far_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 
@@ -173,8 +193,8 @@ void OrthographicCamera::setBounds(
 }
 
 void OrthographicCamera::resize(float width, float height) noexcept {
-    float half_w = width * 0.5f;
-    float half_h = height * 0.5f;
+    float half_w = width * kHalf;
+    float half_h = height * kHalf;
     left_ = -half_w;
     right_ = half_w;
     bottom_ = -half_h;

@@ -34,7 +34,7 @@ class VNE_SCENE_API AmbientLight : public ILight {
      * @param intensity Intensity factor.
      * @param name Light name.
      */
-    AmbientLight(const vne::math::Vec3f& color, float intensity, const std::string& name = "AmbientLight");
+    AmbientLight(const vne::math::Vec3f& color, float intensity, std::string name = "AmbientLight");
     ~AmbientLight() noexcept override = default;
 
     /** @brief Returns LightType::eAmbient. */

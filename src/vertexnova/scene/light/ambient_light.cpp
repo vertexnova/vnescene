@@ -14,10 +14,10 @@
 
 namespace vne::scene {
 
-AmbientLight::AmbientLight(const vne::math::Vec3f& color, float intensity, const std::string& name)
+AmbientLight::AmbientLight(const vne::math::Vec3f& color, float intensity, std::string name)
     : color_(color)
     , intensity_(std::max(0.0f, intensity))
-    , name_(name)
+    , name_(std::move(name))
     , enabled_(true) {}
 
 void AmbientLight::setIntensity(float intensity) noexcept {

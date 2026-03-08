@@ -42,7 +42,7 @@ class VNE_SCENE_API DirectionalLight : public ILight {
     DirectionalLight(const vne::math::Vec3f& direction,
                      const vne::math::Vec3f& color,
                      float intensity,
-                     const std::string& name = "DirectionalLight");
+                     std::string name = "DirectionalLight");
     ~DirectionalLight() noexcept override = default;
 
     /** @brief Returns LightType::eDirectional. */

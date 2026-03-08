@@ -14,23 +14,31 @@
 
 namespace vne::scene {
 
+namespace {
+
+constexpr float kMinRange = 0.001f;
+// LightGpu misc.x: 0=Ambient, 1=Directional, 2=Point, 3=Spot
+constexpr float kLightTypePoint = 2.0f;
+
+}  // namespace
+
 PointLight::PointLight(const vne::math::Vec3f& position,
                        const vne::math::Vec3f& color,
                        float intensity,
                        float range,
-                       const std::string& name)
+                       std::string name)
     : position_(position)
     , color_(color)
     , intensity_(std::max(0.0f, intensity))
-    , range_(std::max(0.001f, range))
-    , name_(name)
+    , range_(std::max(kMinRange, range))
+    , name_(std::move(name))
     , enabled_(true) {}
 
 void PointLight::setIntensity(float intensity) noexcept {
     intensity_ = std::max(0.0f, intensity);
 }
 void PointLight::setRange(float range) noexcept {
-    range_ = std::max(0.001f, range);
+    range_ = std::max(kMinRange, range);
 }
 
 LightGpu PointLight::toGpu() const noexcept {
@@ -38,7 +46,7 @@ LightGpu PointLight::toGpu() const noexcept {
     out.color_intensity = Float4{color_.x(), color_.y(), color_.z(), intensity_};
     out.position_range = Float4{position_.x(), position_.y(), position_.z(), range_};
     out.direction_inner_cos = Float4{0.0f, -1.0f, 0.0f, 0.0f};
-    out.misc = Float4{2.0f, enabled_ ? 1.0f : 0.0f, 0.0f, 0.0f};
+    out.misc = Float4{kLightTypePoint, enabled_ ? 1.0f : 0.0f, 0.0f, 0.0f};
     return out;
 }
 

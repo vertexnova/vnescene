@@ -46,7 +46,7 @@ class VNE_SCENE_API SpotLight : public ILight {
               float range,
               float inner_angle_deg,
               float outer_angle_deg,
-              const std::string& name = "SpotLight");
+              std::string name = "SpotLight");
     ~SpotLight() noexcept override = default;
 
     /** @brief Returns LightType::eSpot. */

@@ -20,6 +20,12 @@ namespace vne::scene {
 
 using namespace vne::math;
 
+namespace {
+
+constexpr float kHalfFovFactor = 0.5f;
+
+}  // namespace
+
 void fitToAabb(PerspectiveCamera& cam, const Aabb& aabb, float padding) noexcept {
     Vec3f center = aabb.center();
     Vec3f half = aabb.halfExtents();
@@ -29,7 +35,7 @@ void fitToAabb(PerspectiveCamera& cam, const Aabb& aabb, float padding) noexcept
     }
 
     float v_fov_rad = degToRad(cam.getFieldOfView());
-    float tan_half = std::tan(v_fov_rad * 0.5f);
+    float tan_half = std::tan(v_fov_rad * kHalfFovFactor);
     if (tan_half <= 0.0f) {
         return;
     }

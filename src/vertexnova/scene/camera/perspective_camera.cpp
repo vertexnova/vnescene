@@ -19,26 +19,40 @@ namespace vne::scene {
 
 using namespace vne::math;
 
+namespace {
+
+constexpr float kMinFovDeg = 1.0f;
+constexpr float kMaxFovDeg = 179.0f;
+constexpr float kMinAspectRatio = 0.1f;
+constexpr float kMinNearPlane = 0.001f;
+constexpr float kMinFarPlaneOffset = 0.1f;
+
+}  // namespace
+
 PerspectiveCamera::PerspectiveCamera(
-    float fov, float aspect_ratio, float near_plane, float far_plane, const std::string& name)
-    : name_(name)
+    float fov, float aspect_ratio, float near_plane, float far_plane, std::string name)
+    : name_(std::move(name))
     , fov_(fov)
     , aspect_ratio_(aspect_ratio)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    PerspectiveCamera::updateMatrices();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 PerspectiveCamera::PerspectiveCamera(
-    float fov, float width, float height, float near_plane, float far_plane, const std::string& name)
-    : name_(name)
+    float fov, float width, float height, float near_plane, float far_plane, std::string name)
+    : name_(std::move(name))
     , fov_(fov)
     , aspect_ratio_(width / height)
     , near_plane_(near_plane)
     , far_plane_(far_plane)
     , width_(width)
     , height_(height) {
-    PerspectiveCamera::updateMatrices();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {
@@ -75,9 +89,13 @@ Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
     return view_matrix_;
 }
 
-void PerspectiveCamera::updateViewMatrix() noexcept {
+void PerspectiveCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = Mat4f::lookAt(position_, target_, up_, graphics_api_);
     view_matrix_dirty_ = false;
+}
+
+void PerspectiveCamera::updateViewMatrix() noexcept {
+    updateViewMatrixImpl();
 }
 
 Mat4f PerspectiveCamera::getProjectionMatrix() const noexcept {
@@ -87,10 +105,14 @@ Mat4f PerspectiveCamera::getProjectionMatrix() const noexcept {
     return projection_matrix_;
 }
 
-void PerspectiveCamera::updateProjectionMatrix() noexcept {
+void PerspectiveCamera::updateProjectionMatrixImpl() noexcept {
     float fov_rad = degToRad(fov_);
     projection_matrix_ = Mat4f::perspective(fov_rad, aspect_ratio_, near_plane_, far_plane_, graphics_api_);
     projection_matrix_dirty_ = false;
+}
+
+void PerspectiveCamera::updateProjectionMatrix() noexcept {
+    updateProjectionMatrixImpl();
 }
 void PerspectiveCamera::setGraphicsApi(GraphicsApi api) noexcept {
     if (graphics_api_ != api) {
@@ -107,8 +129,8 @@ Mat4f PerspectiveCamera::getViewProjectionMatrix() const noexcept {
 }
 
 void PerspectiveCamera::updateMatrices() noexcept {
-    updateViewMatrix();
-    updateProjectionMatrix();
+    updateViewMatrixImpl();
+    updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
@@ -129,17 +151,17 @@ void PerspectiveCamera::setName(const std::string& name) noexcept {
 }
 
 void PerspectiveCamera::setFieldOfView(float fov) noexcept {
-    fov_ = std::clamp(fov, 1.0f, 179.0f);
+    fov_ = std::clamp(fov, kMinFovDeg, kMaxFovDeg);
     projection_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::setAspectRatio(float aspect_ratio) noexcept {
-    aspect_ratio_ = std::max(0.1f, aspect_ratio);
+    aspect_ratio_ = std::max(kMinAspectRatio, aspect_ratio);
     projection_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::setNearPlane(float near_plane) noexcept {
-    near_plane_ = std::max(0.001f, near_plane);
+    near_plane_ = std::max(kMinNearPlane, near_plane);
     if (near_plane_ >= far_plane_) {
         far_plane_ = near_plane_ + 1.0f;
     }
@@ -147,15 +169,15 @@ void PerspectiveCamera::setNearPlane(float near_plane) noexcept {
 }
 
 void PerspectiveCamera::setFarPlane(float far_plane) noexcept {
-    far_plane_ = std::max(near_plane_ + 0.1f, far_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::setPerspective(float fov, float aspect_ratio, float near_plane, float far_plane) noexcept {
-    fov_ = std::clamp(fov, 1.0f, 179.0f);
-    aspect_ratio_ = std::max(0.1f, aspect_ratio);
-    near_plane_ = std::max(0.001f, near_plane);
-    far_plane_ = std::max(near_plane_ + 0.1f, far_plane);
+    fov_ = std::clamp(fov, kMinFovDeg, kMaxFovDeg);
+    aspect_ratio_ = std::max(kMinAspectRatio, aspect_ratio);
+    near_plane_ = std::max(kMinNearPlane, near_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 
