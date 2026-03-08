@@ -62,8 +62,8 @@ target_include_directories(vnescene
 
 target_link_libraries(vnescene
     PUBLIC
-        vne::scene::Warnings
-        vne::scene::BuildSettings
+        SceneWarnings
+        SceneBuildSettings
         vne::math
     PRIVATE
         Threads::Threads

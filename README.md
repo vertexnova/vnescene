@@ -47,8 +47,11 @@ It depends on **vnemath** for matrices, vectors, and rays. The example programs 
 ```bash
 git submodule add https://github.com/vertexnova/vnescene.git external/vnescene
 # Ensure vnemath (and optionally vnelogging) are available as dependencies.
+```
 
-# In your CMakeLists.txt
+In your `CMakeLists.txt`:
+
+```cmake
 add_subdirectory(external/vnescene)
 target_link_libraries(your_target PRIVATE vne::scene)
 ```
@@ -74,8 +77,11 @@ cd vnescene
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
 cmake --build build
 sudo cmake --install build
+```
 
-# In your CMakeLists.txt
+In your `CMakeLists.txt`:
+
+```cmake
 find_package(VneScene REQUIRED)
 target_link_libraries(your_target PRIVATE vne::scene)
 ```
@@ -111,6 +117,7 @@ cmake --build build
 
 ```cpp
 #include <vertexnova/scene/scene.h>
+#include <memory>
 
 int main() {
     using namespace vne::scene;
@@ -122,7 +129,7 @@ int main() {
 
     SceneState state;
     state.setActiveCamera(cam);
-    state.addLight(std::make_shared<AmbientLight>(Vec3f(0.2f)));
+    state.addLight(std::make_shared<AmbientLight>(Vec3f(0.2f, 0.2f, 0.2f), 1.0f));
 
     if (state.hasActiveCamera()) {
         CameraGpu cam_gpu = state.getActiveCamera()->toGpu();
@@ -166,7 +173,7 @@ Build with `-DVNE_SCENE_EXAMPLES=ON` or use the dev preset (`-DVNE_SCENE_DEV=ON`
 ## Requirements
 
 - C++20
-- CMake 3.16+
+- CMake 3.19+
 - [vnemath](https://github.com/vertexnova/vnemath) (required)
 - vnelogging (optional; for examples)
 

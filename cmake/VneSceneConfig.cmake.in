@@ -1,0 +1,12 @@
+# VneSceneConfig.cmake - generated for find_package(VneScene)
+# VneScene depends on VneMath and Threads
+include(CMakeFindDependencyMacro)
+find_dependency(VneMath REQUIRED)
+find_dependency(Threads REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/VneSceneTargets.cmake")
+
+# Alias for consumer convenience (export uses vne::vnescene)
+if(NOT TARGET vne::scene)
+    add_library(vne::scene ALIAS vne::vnescene)
+endif()
