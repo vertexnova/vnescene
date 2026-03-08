@@ -29,8 +29,7 @@ constexpr float kMinFarPlaneOffset = 0.1f;
 
 }  // namespace
 
-PerspectiveCamera::PerspectiveCamera(
-    float fov, float aspect_ratio, float near_plane, float far_plane, std::string name)
+PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_plane, float far_plane, std::string name)
     : name_(std::move(name))
     , fov_(fov)
     , aspect_ratio_(aspect_ratio)

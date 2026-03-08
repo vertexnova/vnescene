@@ -22,11 +22,8 @@ constexpr float kLightTypePoint = 2.0f;
 
 }  // namespace
 
-PointLight::PointLight(const vne::math::Vec3f& position,
-                       const vne::math::Vec3f& color,
-                       float intensity,
-                       float range,
-                       std::string name)
+PointLight::PointLight(
+    const vne::math::Vec3f& position, const vne::math::Vec3f& color, float intensity, float range, std::string name)
     : position_(position)
     , color_(color)
     , intensity_(std::max(0.0f, intensity))

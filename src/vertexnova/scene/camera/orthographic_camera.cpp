@@ -41,8 +41,7 @@ OrthographicCamera::OrthographicCamera(
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
-OrthographicCamera::OrthographicCamera(
-    float width, float height, float near_plane, float far_plane, std::string name)
+OrthographicCamera::OrthographicCamera(float width, float height, float near_plane, float far_plane, std::string name)
     : name_(std::move(name))
     , left_(-width * kHalf)
     , right_(width * kHalf)

@@ -39,11 +39,8 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera {
      * @param far_plane Far clip plane.
      * @param name Camera name.
      */
-    PerspectiveCamera(float fov,
-                      float aspect_ratio,
-                      float near_plane,
-                      float far_plane,
-                      std::string name = "PerspectiveCamera");
+    PerspectiveCamera(
+        float fov, float aspect_ratio, float near_plane, float far_plane, std::string name = "PerspectiveCamera");
     /**
      * @brief Construct from FOV and viewport size (aspect computed).
      * @param fov Field of view in degrees.
@@ -157,10 +154,10 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera {
     std::string name_;                             //!< Camera name.
     bool active_ = true;                           //!< Whether this camera is active for rendering.
     vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};  //!< Backend for view/projection.
-    float fov_ = 60.0f;           //!< Field of view in degrees.
-    float aspect_ratio_ = 16.0f / 9.0f;  //!< Viewport aspect ratio (width / height).
-    float near_plane_ = 0.1f;      //!< Near clip plane distance.
-    float far_plane_ = 1000.0f;    //!< Far clip plane distance.
+    float fov_ = 60.0f;                                                     //!< Field of view in degrees.
+    float aspect_ratio_ = 16.0f / 9.0f;                                     //!< Viewport aspect ratio (width / height).
+    float near_plane_ = 0.1f;                                               //!< Near clip plane distance.
+    float far_plane_ = 1000.0f;                                             //!< Far clip plane distance.
     float width_ = 0.0f;                                                    //!< Viewport width (for aspect/resize).
     float height_ = 0.0f;                                                   //!< Viewport height (for aspect/resize).
     mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};    //!< Cached view matrix.
