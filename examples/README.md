@@ -1,6 +1,6 @@
-# VneTemplate Examples
+# VneScene Examples
 
-This directory contains examples demonstrating the VneTemplate API.
+This directory contains examples demonstrating the VneScene API.
 
 ## Building Examples
 
@@ -8,15 +8,15 @@ From the project root (use `build/shared` or `build/static`):
 
 ```bash
 # Shared library build
-cmake -B build/shared -DVNE_TEMPLATE_EXAMPLES=ON -DVNE_TEMPLATE_LIB_TYPE=shared
+cmake -B build/shared -DVNE_SCENE_EXAMPLES=ON -DVNE_SCENE_LIB_TYPE=shared
 cmake --build build/shared
 
 # Static library build
-cmake -B build/static -DVNE_TEMPLATE_EXAMPLES=ON -DVNE_TEMPLATE_LIB_TYPE=static
+cmake -B build/static -DVNE_SCENE_EXAMPLES=ON -DVNE_SCENE_LIB_TYPE=static
 cmake --build build/static
 ```
 
-Alternatively, `-DVNE_TEMPLATE_DEV=ON` enables both tests and examples.
+Alternatively, `-DVNE_SCENE_DEV=ON` enables both tests and examples.
 
 Executables are placed in `build/shared/bin/examples/` (or `build/static/bin/examples/`).
 

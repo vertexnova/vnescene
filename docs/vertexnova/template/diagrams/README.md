@@ -1,6 +1,6 @@
 # Diagrams
 
-Draw.io source files for the VneTemplate documentation.
+Draw.io source files for the VneScene documentation.
 
 ## Export to PNG
 
@@ -33,6 +33,6 @@ drawio -x -f png -o . .
 
 | Source | Output | Used in template.md | Contents |
 |--------|--------|---------------------|----------|
-| context.drawio | context.png | Overview | C4 system context: Application → VneTemplate (get_version, hello) |
+| context.drawio | context.png | Overview | C4 system context: Application → VneScene (get_version, hello) |
 | api.drawio | api.png | API usage | API flow: get_version(), hello() |
 | architecture.drawio | architecture.png | Project layout | Folder structure and build flow |
