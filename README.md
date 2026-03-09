@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="icons/vertexnova_logo_medallion_with_text.svg" alt="VertexNova Template" width="320"/>
+  <img src="icons/vertexnova_logo_medallion_with_text.svg" alt="VertexNova Scene" width="320"/>
 </p>
 
 <p align="center">
-  <strong>Minimal C++ project template for the VertexNova ecosystem</strong>
+  <strong>Scene, camera, and light building blocks for VertexNova</strong>
 </p>
 
 <p align="center">
@@ -19,131 +19,171 @@
 
 ---
 
-# VneScene
+## About
 
-Minimal VertexNova-standard C++ template: CMake, deps (external + internal), tests, examples, and documentation. Use it as a starting point for new libraries or apps in the [VertexNova](https://github.com/vertexnova) stack.
+VneScene provides view (cameras) and lighting data structures with GPU-friendly packing. It does not implement ECS, rendering, or input — it is designed for use by a renderer or viewer as part of the [VertexNova](https://github.com/vertexnova) stack.
 
-## Directory layout
+VneScene is a C++20 library offering:
 
-| Path | Description |
-|------|-------------|
-| `cmake/vnecmake/` | CMake modules submodule (ProjectSetup, ProjectWarnings, VneUseDep) |
-| `configs/` | Configured headers (e.g. `config.h.in`) |
-| `deps/external/` | Third-party deps (e.g. googletest) |
-| `deps/internal/` | VertexNova internal libs (vnecommon, vnelogging) |
-| `include/` | Public API headers (`vertexnova/template/`) |
-| `src/` | Implementation |
-| `tests/` | Unit tests (Google Test) |
-| `docs/` | Doxygen input (`doxyfile.in`) and extra docs |
-| `scripts/` | Helper scripts (build, format, generate-docs) |
+- **Cameras**: Perspective and orthographic cameras with view/projection matrices, GPU pack layout, fit-to-AABB, screen-to-world ray, and transform sync with external nodes.
+- **Lights**: Ambient, directional, point, and spot lights with a common GPU layout and optional shadow settings.
+- **SceneState**: One active camera plus a list of lights (with optional max count); suitable for sandbox and viewer use cases.
+- **Handles**: Type-safe generational handles (`CameraId`, `LightId`) for identity.
 
-## Prerequisites
+It depends on **vnemath** for matrices, vectors, and rays. The example programs optionally use **vnelogging** for console output.
 
-- **CMake** 3.19 or newer  
-- **C++20** compiler (e.g. GCC 10+, Clang 10+, MSVC 2019+)  
-- **Doxygen** (optional, for `scripts/generate-docs.sh` and `-DENABLE_DOXYGEN=ON`)
+## Features
 
-## Dependencies
+- **Cameras**: `ICamera`, `PerspectiveCamera`, `OrthographicCamera`, `CameraFactory`, `CameraGpu`, fit-to-AABB, screen ray, camera–transform sync.
+- **Lights**: `ILight`, `AmbientLight`, `DirectionalLight`, `PointLight`, `SpotLight`, `LightGpu`, shadow settings.
+- **Scene state**: `SceneState` (active camera + lights, max lights policy).
+- **Environment**: Exposure, gamma, clear color, optional HDRI asset id.
+- **Cross-platform**: Linux, macOS, Windows (and optionally iOS, Android, Web via vnemath).
 
-- **External:** Tests use [Google Test](https://github.com/google/googletest). Either add `deps/external/googletest` as a submodule (recommended tag: `v1.17.0`) or let CMake use FetchContent when the directory is missing.  
-- **Internal:** **vnecmake** (required) is the CMake modules submodule at `cmake/vnecmake`. Optional libraries `vnecommon` and `vnelogging` go under `deps/internal/`. See [deps/README.md](deps/README.md). If they are missing, the template still builds but does not link to `vne::common` or `vne::logging`.
+## Installation
 
-From the project root:
+### Option 1: Git Submodule (Recommended)
 
 ```bash
-git submodule update --init --recursive
+git submodule add https://github.com/vertexnova/vnescene.git external/vnescene
+# Ensure vnemath (and optionally vnelogging) are available as dependencies.
 ```
 
-(Add submodules first if your repo uses them; see `deps/README.md`.)
+In your `CMakeLists.txt`:
 
-## Build
+```cmake
+add_subdirectory(external/vnescene)
+target_link_libraries(your_target PRIVATE vne::scene)
+```
 
-Builds use **`build/static`** or **`build/shared`** (one library type per directory). From the project root:
+### Option 2: FetchContent
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+    vnescene
+    GIT_REPOSITORY https://github.com/vertexnova/vnescene.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(vnescene)
+target_link_libraries(your_target PRIVATE vne::scene)
+```
+
+### Option 3: System Install
 
 ```bash
-# Shared library (default)
-cmake -B build/shared -DCMAKE_BUILD_TYPE=Debug -DVNE_SCENE_TESTS=ON
-cmake --build build/shared
-
-# Static library
-cmake -B build/static -DCMAKE_BUILD_TYPE=Debug -DVNE_SCENE_LIB_TYPE=static -DVNE_SCENE_TESTS=ON
-cmake --build build/static
+git clone --recursive https://github.com/vertexnova/vnescene.git
+cd vnescene
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build
+sudo cmake --install build
 ```
 
-Or use the platform scripts (they use `build/<lib_type>/...`):
+In your `CMakeLists.txt` (ensure [vnemath](https://github.com/vertexnova/vnemath) is installed first):
+
+```cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_PREFIX_PATH}/lib/cmake/VneScene")
+find_package(VneScene REQUIRED)
+target_link_libraries(your_target PRIVATE vne::scene)
+```
+
+Configure with `-DCMAKE_PREFIX_PATH=/usr/local` (or your install prefix) so the Find module is discovered.
+
+## Building
 
 ```bash
-# macOS (default: shared)
-./scripts/build_macos.sh -t Debug -a configure_and_build
-./scripts/build_macos.sh -l static -t Release -a configure_and_build   # static in build/static/...
-
-# Linux
-./scripts/build_linux.sh -t Debug -a configure_and_build
-./scripts/build_linux.sh -l static -c clang -a test
-
-# Windows
-.\scripts\build_windows.ps1 -BuildType Debug -Action configure_and_build
-.\scripts\build_windows.ps1 -LibType static -BuildType Release -Action configure_and_build   # static in build/static/...
+git clone --recursive https://github.com/vertexnova/vnescene.git
+cd vnescene
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ```
 
-Options: `-t` / `-BuildType` build type, `-a` / `-Action` action, `-l` / `-LibType` lib type (`static` | `shared`, default `shared`), `-clean` / `-Clean`, `-j N` / `-Jobs N`. macOS script also supports `-xcode` for Xcode project.
-
-## Test
+For local development (examples + tests enabled):
 
 ```bash
-ctest -C Debug --test-dir build/shared
-# or for static: ctest -C Debug --test-dir build/static
+cmake -B build -DVNE_SCENE_DEV=ON
+cmake --build build
 ```
 
-Or:
+### CMake Options
 
-```bash
-./scripts/build_macos.sh -a test
+| Option | Default | Description |
+|--------|---------|-------------|
+| `VNE_SCENE_TESTS` | `ON` | Build the test suite |
+| `VNE_SCENE_EXAMPLES` | `OFF` | Build example applications |
+| `VNE_SCENE_DEV` | `ON` (top-level) | Dev preset: tests and examples ON |
+| `VNE_SCENE_CI` | `OFF` | CI preset: tests ON, examples OFF |
+| `ENABLE_DOXYGEN` | `OFF` | Build API documentation (Doxygen) |
+| `ENABLE_COVERAGE` | `OFF` | Enable code coverage reporting |
+
+## Quick Start
+
+```cpp
+#include <vertexnova/scene/scene.h>
+#include <memory>
+
+int main() {
+    using namespace vne::scene;
+    using namespace vne::math;
+
+    auto cam = CameraFactory::createPerspective(
+        PerspectiveCameraParameters(60.0f, 16.0f / 9.0f, 0.1f, 100.0f));
+    cam->setPosition(Vec3f(0.0f, 2.0f, 5.0f));
+
+    SceneState state;
+    state.setActiveCamera(cam);
+    state.addLight(std::make_shared<AmbientLight>(Vec3f(0.2f, 0.2f, 0.2f), 1.0f));
+
+    if (state.hasActiveCamera()) {
+        CameraGpu cam_gpu = state.getActiveCamera()->toGpu();
+        // Upload cam_gpu to GPU or pass to renderer
+    }
+    return 0;
+}
 ```
+
+See [examples/01_basic](examples/01_basic) for a complete minimal example.
+
+## Examples
+
+| Example | Description |
+|---------|-------------|
+| [01_basic](examples/01_basic) | Minimal scene: camera and lights with logging |
+| [02_scene_gpu_pack](examples/02_scene_gpu_pack) | SceneState and packing camera/lights for GPU |
+| [03_camera_backend](examples/03_camera_backend) | setGraphicsApi (OpenGL/Vulkan), matrix logging |
+| [04_fit_to_aabb](examples/04_fit_to_aabb) | fitToAabb and project AABB corners |
+| [05_screen_ray](examples/05_screen_ray) | screenToWorldRay at center pixel |
+| [06_shadow_settings](examples/06_shadow_settings) | Directional and spot lights, setShadowSettings |
+| [07_camera_transform_sync](examples/07_camera_transform_sync) | syncCameraFromTransformNode / syncTransformNodeFromCamera |
+
+Build with `-DVNE_SCENE_EXAMPLES=ON` or use the dev preset (`-DVNE_SCENE_DEV=ON`). Run from `build/bin/examples/`. See [examples/README.md](examples/README.md) for details.
 
 ## Documentation
 
-- **Template overview and diagrams:** [docs/vertexnova/template/template.md](docs/vertexnova/template/template.md) — context and API diagrams (Draw.io sources in `docs/vertexnova/template/diagrams/`).
-- **API docs:** Configure with Doxygen enabled and build the doc target:
+- [API Documentation](docs/README.md) — Generate with Doxygen (`-DENABLE_DOXYGEN=ON`, then `cmake --build build --target vnescene_doc_doxygen`).
+- [Architecture & design](docs/vertexnova/scene/scene.md) — Module overview, components, and usage.
 
-  ```bash
-  cmake -B build/shared -DENABLE_DOXYGEN=ON
-  cmake --build build/shared --target vnescene_doc_doxygen
-  ```
+## Platform Support
 
-  Output: `build/shared/docs/html/index.html`.
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Linux | Supported | GCC 9+, Clang 10+ |
+| macOS | Supported | Xcode 12+, Apple Clang |
+| Windows | Supported | MSVC 2019+, MinGW |
+| iOS / visionOS | Supported | Via vnemath toolchain |
+| Android / Web | Supported | Via vnemath |
 
-- **Script:** From project root:
+## Requirements
 
-  ```bash
-  ./scripts/generate-docs.sh
-  ```
-
-  Use `--api-only` to only generate API docs, or `--validate` to only check links and coverage. See `./scripts/generate-docs.sh --help`.
-
-## Format and tidy
-
-- **clang-format:** Config in [.clang-format](.clang-format). Format in place or check only (CI):
-  ```bash
-  ./scripts/format.sh          # format sources
-  ./scripts/format.sh -check   # check only (used in CI)
-  ```
-- **clang-tidy:** Config in [.clang-tidy](.clang-tidy). Generate `compile_commands.json` (e.g. `cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -B build/shared`), then run `clang-tidy -p build/shared`.
-
-## CI
-
-GitHub Actions runs on push and pull requests to `main`: format check, clang-tidy, and build/test on Linux (GCC, Clang), macOS, and Windows. See [.github/workflows/ci.yml](.github/workflows/ci.yml).
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for build, test, and style. We follow the [Contributor Covenant](CODE_OF_CONDUCT.md) Code of Conduct.
-
-## Releases
-
-Releases are manual. The **VERSION** file at the repo root is the source of truth; CMake reads it at configure time and exposes it as `get_version()`.
-
-To cut a release: update **VERSION**, add a dated entry to **CHANGELOG.md**, commit, create and push a tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`), then create a GitHub Release from that tag and paste the CHANGELOG section.
+- C++20
+- CMake 3.19+
+- [vnemath](https://github.com/vertexnova/vnemath) (required)
+- vnelogging (optional; for examples)
 
 ## License
 
-See [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
+
+---
+
+Part of the [VertexNova](https://github.com/vertexnova) project.
