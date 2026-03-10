@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1](https://github.com/vertexnova/vnescene/compare/v1.1.0...v1.1.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* fixing ci issue for failing for ios ([#4](https://github.com/vertexnova/vnescene/issues/4)) ([31cfb2d](https://github.com/vertexnova/vnescene/commit/31cfb2dc53443674042bddc51bbae9d3282e7f3b))
+
 ## [1.1.0](https://github.com/vertexnova/vnescene/compare/v1.0.0...v1.1.0) (2026-03-08)
 
 
