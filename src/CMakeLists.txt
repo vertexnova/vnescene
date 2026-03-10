@@ -90,6 +90,22 @@ if(_lib_type STREQUAL "SHARED")
     endif()
 endif()
 
+# iOS/Xcode: satisfy "Signing requires a development team" for the vnescene target.
+# Set DEVELOPMENT_TEAM when provided (e.g. -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=TEAM_ID).
+# When not set (e.g. CI), disable code signing for this library so the build can proceed.
+if(CMAKE_GENERATOR STREQUAL "Xcode" AND (IOS OR CMAKE_SYSTEM_NAME STREQUAL "iOS"))
+    if(DEFINED CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM AND CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM)
+        set_target_properties(vnescene PROPERTIES
+            XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM}")
+    else()
+        # Static/shared lib: fully suppress signing (CI has no provisioning/keychain).
+        set_target_properties(vnescene PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+            XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+    endif()
+endif()
+
 add_library(vne::scene ALIAS vnescene)
 
 source_group("Sources" FILES ${SOURCE_FILES})
