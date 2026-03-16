@@ -41,7 +41,7 @@ class VNE_SCENE_API CameraBase {
     CameraBase() = default;
     ~CameraBase() noexcept = default;
 
-    // Non-copyable, non-movable (concrete cameras manage copy/move themselves).
+    // Copy/move defaulted; concrete cameras manage their own copy/move semantics.
     CameraBase(const CameraBase&) = default;
     CameraBase& operator=(const CameraBase&) = default;
     CameraBase(CameraBase&&) noexcept = default;

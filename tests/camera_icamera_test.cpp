@@ -32,7 +32,7 @@ namespace {
 
 constexpr float kTol = 1e-5f;
 
-// Helper: build ICamera* instances for parameterized-style tests.
+// Helper: build camera instances for testing (used via ICamera&).
 PerspectiveCamera makePerspective() {
     return PerspectiveCamera(60.0f, 800.0f, 600.0f, 0.1f, 1000.0f);
 }

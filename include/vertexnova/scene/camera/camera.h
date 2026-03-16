@@ -18,7 +18,6 @@
 #include "vertexnova/scene/export.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
 #include <vertexnova/math/core/core.h>
-#include <vertexnova/math/projection_utils.h>
 #include <memory>
 #include <string>
 
