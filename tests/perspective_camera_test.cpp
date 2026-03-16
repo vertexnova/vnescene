@@ -1,0 +1,218 @@
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   March 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file perspective_camera_test.cpp
+ * @brief Tests for PerspectiveCamera-specific construction, FOV/aspect,
+ * movement helpers, resize, clip planes, graphics API, and scene-scale.
+ */
+
+#include <gtest/gtest.h>
+#include <cmath>
+#include "vertexnova/scene/camera/perspective_camera.h"
+#include <vertexnova/math/core/core.h>
+
+using namespace vne::scene;
+using namespace vne::math;
+
+namespace {
+
+constexpr float kTol = 1e-5f;
+
+PerspectiveCamera makePerspective(float fov = 60.0f,
+                                  float width = 800.0f,
+                                  float height = 600.0f,
+                                  float near_plane = 0.1f,
+                                  float far_plane = 1000.0f) {
+    return PerspectiveCamera(fov, width, height, near_plane, far_plane);
+}
+
+}  // namespace
+
+//==============================================================================
+// Construction
+//==============================================================================
+
+TEST(PerspectiveCameraTest, ConstructFromFovAspectRatio_SetsFovAndAspect) {
+    PerspectiveCamera cam(45.0f, 16.0f / 9.0f, 0.1f, 500.0f);
+    EXPECT_NEAR(cam.getFieldOfView(), 45.0f, kTol);
+    EXPECT_NEAR(cam.getAspectRatio(), 16.0f / 9.0f, kTol);
+    EXPECT_NEAR(cam.getNearPlane(), 0.1f, kTol);
+    EXPECT_NEAR(cam.getFarPlane(), 500.0f, kTol);
+    EXPECT_NEAR(cam.getWidth(), 0.0f, kTol);
+    EXPECT_NEAR(cam.getHeight(), 0.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, ConstructFromFovWidthHeight_SetsAspectAndViewport) {
+    PerspectiveCamera cam(60.0f, 1920.0f, 1080.0f, 0.1f, 1000.0f);
+    EXPECT_NEAR(cam.getFieldOfView(), 60.0f, kTol);
+    EXPECT_NEAR(cam.getAspectRatio(), 1920.0f / 1080.0f, kTol);
+    EXPECT_NEAR(cam.getWidth(), 1920.0f, kTol);
+    EXPECT_NEAR(cam.getHeight(), 1080.0f, kTol);
+}
+
+//==============================================================================
+// setPerspective (FOV clamp, aspect minimum, clip planes)
+//==============================================================================
+
+TEST(PerspectiveCameraTest, SetPerspective_ClampsFov) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPerspective(0.0f, 1.0f, 0.1f, 100.0f);
+    EXPECT_GE(cam.getFieldOfView(), 1.0f);
+    cam.setPerspective(200.0f, 1.0f, 0.1f, 100.0f);
+    EXPECT_LE(cam.getFieldOfView(), 179.0f);
+}
+
+TEST(PerspectiveCameraTest, SetPerspective_EnforcesMinAspectRatio) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPerspective(60.0f, 0.05f, 0.1f, 100.0f);
+    EXPECT_GE(cam.getAspectRatio(), 0.1f);
+}
+
+TEST(PerspectiveCameraTest, SetPerspective_UpdatesNearFarPlanes) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPerspective(60.0f, 1.0f, 0.5f, 200.0f);
+    EXPECT_NEAR(cam.getNearPlane(), 0.5f, kTol);
+    EXPECT_NEAR(cam.getFarPlane(), 200.0f, kTol);
+}
+
+//==============================================================================
+// resize
+//==============================================================================
+
+TEST(PerspectiveCameraTest, Resize_UpdatesWidthHeightAndAspectRatio) {
+    PerspectiveCamera cam = makePerspective();
+    cam.resize(1920.0f, 1080.0f);
+    EXPECT_NEAR(cam.getWidth(), 1920.0f, kTol);
+    EXPECT_NEAR(cam.getHeight(), 1080.0f, kTol);
+    EXPECT_NEAR(cam.getAspectRatio(), 1920.0f / 1080.0f, kTol);
+}
+
+//==============================================================================
+// setNearPlane / setFarPlane / setClipPlanes (min constraints)
+//==============================================================================
+
+TEST(PerspectiveCameraTest, SetNearPlane_EnforcesMinimum) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setNearPlane(0.0001f);
+    EXPECT_GE(cam.getNearPlane(), 0.001f);
+}
+
+TEST(PerspectiveCameraTest, SetFarPlane_EnforcesOffsetFromNear) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setNearPlane(1.0f);
+    cam.setFarPlane(1.05f);
+    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+}
+
+TEST(PerspectiveCameraTest, SetClipPlanes_AppliesBothConstraints) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setClipPlanes(0.0001f, 0.05f);
+    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+}
+
+//==============================================================================
+// setGraphicsApi
+//==============================================================================
+
+TEST(PerspectiveCameraTest, SetGraphicsApi_ChangesClipToScreenBehavior) {
+    PerspectiveCamera cam_gl = makePerspective();
+    PerspectiveCamera cam_metal = makePerspective();
+    cam_metal.setGraphicsApi(GraphicsApi::eMetal);
+    Mat4f m_gl = cam_gl.getClipToScreenMatrix(800.0f, 600.0f);
+    Mat4f m_metal = cam_metal.getClipToScreenMatrix(800.0f, 600.0f);
+    EXPECT_NE(cam_gl.getGraphicsApi(), cam_metal.getGraphicsApi());
+    bool same = true;
+    for (std::size_t col = 0; col < 4 && same; ++col)
+        for (std::size_t row = 0; row < 4 && same; ++row)
+            same = same && (std::fabs(m_gl[col][row] - m_metal[col][row]) < kTol);
+    EXPECT_FALSE(same);
+}
+
+//==============================================================================
+// getForward / getRight / movement helpers
+//==============================================================================
+
+TEST(PerspectiveCameraTest, GetForward_PointsFromPositionToTarget) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    Vec3f fwd = cam.getForward();
+    EXPECT_NEAR(fwd.x(), 0.0f, kTol);
+    EXPECT_NEAR(fwd.y(), 0.0f, kTol);
+    EXPECT_NEAR(fwd.z(), -1.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, GetRight_PerpendicularToForwardAndUp) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    Vec3f fwd = cam.getForward();
+    Vec3f right = cam.getRight();
+    float dot = fwd.x() * right.x() + fwd.y() * right.y() + fwd.z() * right.z();
+    EXPECT_NEAR(dot, 0.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, MoveForward_TranslatesPositionAndTarget) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam.moveForward(2.0f);
+    EXPECT_NEAR(cam.getPosition().z(), 3.0f, kTol);
+    EXPECT_NEAR(cam.getTarget().z(), -2.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, MoveRight_TranslatesPositionAndTarget) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam.moveRight(1.0f);
+    EXPECT_NEAR(cam.getPosition().x(), 1.0f, kTol);
+    EXPECT_NEAR(cam.getTarget().x(), 1.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, MoveUp_TranslatesPositionAndTarget) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam.moveUp(2.0f);
+    EXPECT_NEAR(cam.getPosition().y(), 2.0f, kTol);
+    EXPECT_NEAR(cam.getTarget().y(), 2.0f, kTol);
+}
+
+TEST(PerspectiveCameraTest, RotateAroundTarget_ChangesPositionNotTarget) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    Vec3f target_before = cam.getTarget();
+    cam.rotateAroundTarget(90.0f, 0.0f);
+    EXPECT_NEAR(cam.getTarget().x(), target_before.x(), kTol);
+    EXPECT_NEAR(cam.getTarget().y(), target_before.y(), kTol);
+    EXPECT_NEAR(cam.getTarget().z(), target_before.z(), kTol);
+    float dist_before = (Vec3f(0.0f, 0.0f, 5.0f) - Vec3f(0.0f, 0.0f, 0.0f)).length();
+    float dist_after = (cam.getPosition() - cam.getTarget()).length();
+    EXPECT_NEAR(dist_after, dist_before, kTol);
+}
+
+//==============================================================================
+// Scene-scale (class-specific: view matrix reflects scale)
+//==============================================================================
+
+TEST(PerspectiveCameraTest, SetSceneScale_BakesIntoViewMatrix) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    Mat4f view_unscaled = cam.getViewMatrix();
+    cam.setSceneScale(2.0f);
+    Mat4f view_scaled = cam.getViewMatrix();
+    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
+}

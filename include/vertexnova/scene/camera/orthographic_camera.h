@@ -17,6 +17,7 @@
 
 #include "vertexnova/scene/export.h"
 #include "vertexnova/scene/camera/camera.h"
+#include "vertexnova/scene/camera/camera_base.h"
 #include <vertexnova/math/core/core.h>
 #include <string>
 
@@ -28,8 +29,9 @@ namespace vne::scene {
  *
  * Projection is defined by left, right, bottom, top, near, and far planes.
  * Supports resize(width, height) for viewport-based bounds.
+ * Inherits shared state from CameraBase.
  */
-class VNE_SCENE_API OrthographicCamera : public ICamera {
+class VNE_SCENE_API OrthographicCamera : public ICamera, protected CameraBase {
    public:
     /**
      * @brief Construct from explicit frustum bounds.
@@ -114,15 +116,17 @@ class VNE_SCENE_API OrthographicCamera : public ICamera {
     /** @brief Get near clip plane. */
     [[nodiscard]] float getNearPlane() const noexcept override { return near_plane_; }
     /** @brief Set near clip plane. */
-    void setNearPlane(float near_plane) noexcept;
+    void setNearPlane(float near_plane) noexcept override;
     /** @brief Get far clip plane. */
     [[nodiscard]] float getFarPlane() const noexcept override { return far_plane_; }
     /** @brief Set far clip plane. */
-    void setFarPlane(float far_plane) noexcept;
+    void setFarPlane(float far_plane) noexcept override;
+    /** @brief Set near and far clip planes at once. */
+    void setClipPlanes(float near_plane, float far_plane) noexcept override;
     /** @brief Set all frustum bounds at once. */
     void setBounds(float left, float right, float bottom, float top, float near_plane, float far_plane) noexcept;
     /** @brief Resize ortho bounds from viewport width/height (centered). */
-    void resize(float width, float height) noexcept;
+    void resize(float width, float height) noexcept override;
     /** @brief Get frustum width (right - left). */
     [[nodiscard]] float getWidth() const noexcept override { return right_ - left_; }
     /** @brief Get frustum height (top - bottom). */
@@ -136,29 +140,33 @@ class VNE_SCENE_API OrthographicCamera : public ICamera {
     /** @brief Pack as CameraGpu for GPU. */
     [[nodiscard]] CameraGpu toGpu() const noexcept override;
 
+    /** @brief Set position, target, and up atomically; one dirty mark. */
+    void lookAt(const vne::math::Vec3f& position,
+                const vne::math::Vec3f& target,
+                const vne::math::Vec3f& up) noexcept override;
+    /** @brief Keep current position; set target and up; one dirty mark. */
+    void lookAt(const vne::math::Vec3f& target, const vne::math::Vec3f& up) noexcept override;
+
+    /** @brief Get scene-scale factor baked into the view matrix. */
+    [[nodiscard]] float getSceneScale() const noexcept override { return scene_scale_; }
+    /** @brief Set scene-scale factor; marks view matrix dirty. */
+    void setSceneScale(float scale) noexcept override;
+
+    /** @brief Return NDC→screen matrix for the given viewport size. */
+    [[nodiscard]] vne::math::Mat4f getClipToScreenMatrix(float width, float height) const noexcept override;
+
    private:
     /** @brief Non-virtual implementation to avoid virtual call during construction. */
     void updateViewMatrixImpl() noexcept;
     /** @brief Non-virtual implementation to avoid virtual call during construction. */
     void updateProjectionMatrixImpl() noexcept;
 
-    vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};  //!< Camera position in world space.
-    vne::math::Vec3f target_{0.0f, 0.0f, -1.0f};   //!< Look-at target point.
-    vne::math::Vec3f up_{0.0f, 1.0f, 0.0f};        //!< Up vector for view orientation.
-    std::string name_;                             //!< Camera name.
-    bool active_ = true;                           //!< Whether this camera is active for rendering.
-    vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};      //!< Backend for view/projection.
-    float left_;                                                                //!< Left frustum bound (world units).
-    float right_;                                                               //!< Right frustum bound (world units).
-    float bottom_;                                                              //!< Bottom frustum bound (world units).
-    float top_;                                                                 //!< Top frustum bound (world units).
-    float near_plane_;                                                          //!< Near clip plane distance.
-    float far_plane_;                                                           //!< Far clip plane distance.
-    mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};        //!< Cached view matrix.
-    mutable vne::math::Mat4f projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached projection matrix.
-    mutable vne::math::Mat4f view_projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached view * projection.
-    mutable bool view_matrix_dirty_ = true;        //!< True when view matrix needs recomputation.
-    mutable bool projection_matrix_dirty_ = true;  //!< True when projection matrix needs recomputation.
+    float left_;        //!< Left frustum bound (world units).
+    float right_;       //!< Right frustum bound (world units).
+    float bottom_;      //!< Bottom frustum bound (world units).
+    float top_;         //!< Top frustum bound (world units).
+    float near_plane_;  //!< Near clip plane distance.
+    float far_plane_;   //!< Far clip plane distance.
 };
 
 }  // namespace vne::scene

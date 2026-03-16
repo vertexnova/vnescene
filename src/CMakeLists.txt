@@ -9,6 +9,7 @@
 #==============================================================================
 
 set(SOURCE_FILES
+    vertexnova/scene/camera/camera.cpp
     vertexnova/scene/camera/perspective_camera.cpp
     vertexnova/scene/camera/orthographic_camera.cpp
     vertexnova/scene/camera/camera_factory.cpp
@@ -29,6 +30,7 @@ set(HEADER_FILES
     ${VNE_INCLUDE_DIR}/vertexnova/scene/environment.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/gpu_types.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_base.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_types.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_utils.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_factory.h
