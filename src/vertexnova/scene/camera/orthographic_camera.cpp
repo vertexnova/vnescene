@@ -12,6 +12,7 @@
 #include "vertexnova/scene/camera/orthographic_camera.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
 #include <vertexnova/math/core/core.h>
+#include <vertexnova/math/projection_utils.h>
 
 #include <algorithm>
 
@@ -29,26 +30,26 @@ constexpr float kMinFarPlaneOffset = 0.1f;
 
 OrthographicCamera::OrthographicCamera(
     float left, float right, float bottom, float top, float near_plane, float far_plane, std::string name)
-    : name_(std::move(name))
-    , left_(left)
+    : left_(left)
     , right_(right)
     , bottom_(bottom)
     , top_(top)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
+    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 OrthographicCamera::OrthographicCamera(float width, float height, float near_plane, float far_plane, std::string name)
-    : name_(std::move(name))
-    , left_(-width * kHalf)
+    : left_(-width * kHalf)
     , right_(width * kHalf)
     , bottom_(-height * kHalf)
     , top_(height * kHalf)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
+    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -90,6 +91,9 @@ Mat4f OrthographicCamera::getViewMatrix() const noexcept {
 
 void OrthographicCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = Mat4f::lookAt(position_, target_, up_, graphics_api_);
+    if (scene_scale_ != 1.0f) {
+        view_matrix_ = Mat4f::scale(scene_scale_, scene_scale_, scene_scale_) * view_matrix_;
+    }
     view_matrix_dirty_ = false;
 }
 
@@ -112,6 +116,7 @@ void OrthographicCamera::updateProjectionMatrixImpl() noexcept {
 void OrthographicCamera::updateProjectionMatrix() noexcept {
     updateProjectionMatrixImpl();
 }
+
 void OrthographicCamera::setGraphicsApi(GraphicsApi api) noexcept {
     if (graphics_api_ != api) {
         graphics_api_ = api;
@@ -119,6 +124,7 @@ void OrthographicCamera::setGraphicsApi(GraphicsApi api) noexcept {
         projection_matrix_dirty_ = true;
     }
 }
+
 Mat4f OrthographicCamera::getViewProjectionMatrix() const noexcept {
     if (view_matrix_dirty_ || projection_matrix_dirty_) {
         const_cast<OrthographicCamera*>(this)->updateMatrices();
@@ -143,6 +149,7 @@ void OrthographicCamera::setActive(bool active) noexcept {
 const std::string& OrthographicCamera::getName() const noexcept {
     return name_;
 }
+
 void OrthographicCamera::setName(const std::string& name) noexcept {
     name_ = name;
 }
@@ -180,6 +187,12 @@ void OrthographicCamera::setFarPlane(float far_plane) noexcept {
     projection_matrix_dirty_ = true;
 }
 
+void OrthographicCamera::setClipPlanes(float near_plane, float far_plane) noexcept {
+    near_plane_ = std::max(kMinNearPlane, near_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
+    projection_matrix_dirty_ = true;
+}
+
 void OrthographicCamera::setBounds(
     float left, float right, float bottom, float top, float near_plane, float far_plane) noexcept {
     left_ = left;
@@ -199,6 +212,23 @@ void OrthographicCamera::resize(float width, float height) noexcept {
     bottom_ = -half_h;
     top_ = half_h;
     projection_matrix_dirty_ = true;
+}
+
+void OrthographicCamera::lookAt(const Vec3f& position, const Vec3f& target, const Vec3f& up) noexcept {
+    lookAtImpl(position, target, up);
+}
+
+void OrthographicCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
+    lookAtImpl(target, up);
+}
+
+void OrthographicCamera::setSceneScale(float scale) noexcept {
+    scene_scale_ = scale;
+    view_matrix_dirty_ = true;
+}
+
+Mat4f OrthographicCamera::getClipToScreenMatrix(float width, float height) const noexcept {
+    return vne::math::clipToScreenMatrix(width, height, graphics_api_);
 }
 
 float OrthographicCamera::getAspectRatio() const noexcept {

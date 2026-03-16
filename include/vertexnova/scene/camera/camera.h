@@ -18,6 +18,7 @@
 #include "vertexnova/scene/export.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
 #include <vertexnova/math/core/core.h>
+#include <vertexnova/math/projection_utils.h>
 #include <memory>
 #include <string>
 
@@ -69,10 +70,48 @@ class VNE_SCENE_API ICamera {
     [[nodiscard]] virtual float getNearPlane() const noexcept = 0;
     /** @brief Get far clip plane distance. */
     [[nodiscard]] virtual float getFarPlane() const noexcept = 0;
+    /** @brief Set near clip plane distance. */
+    virtual void setNearPlane(float near_plane) noexcept = 0;
+    /** @brief Set far clip plane distance. */
+    virtual void setFarPlane(float far_plane) noexcept = 0;
+    /** @brief Set near and far clip planes at once. */
+    virtual void setClipPlanes(float near_plane, float far_plane) noexcept = 0;
     /** @brief Get viewport/frustum width (0 if N/A). */
     [[nodiscard]] virtual float getWidth() const noexcept = 0;
     /** @brief Get viewport/frustum height (0 if N/A). */
     [[nodiscard]] virtual float getHeight() const noexcept = 0;
+    /** @brief Resize viewport or frustum bounds; recomputes aspect ratio / ortho bounds. */
+    virtual void resize(float width, float height) noexcept = 0;
+
+    /**
+     * @brief Atomic pose setter: set position, target, and up in one call.
+     * Marks the view matrix dirty once instead of three times.
+     */
+    virtual void lookAt(const vne::math::Vec3f& position,
+                        const vne::math::Vec3f& target,
+                        const vne::math::Vec3f& up) noexcept = 0;
+    /**
+     * @brief Pose setter keeping the current position; updates target and up.
+     * Marks the view matrix dirty once.
+     */
+    virtual void lookAt(const vne::math::Vec3f& target, const vne::math::Vec3f& up) noexcept = 0;
+
+    /**
+     * @brief Get the uniform scene-scale factor baked into the view matrix.
+     * Used by vneinteraction's eSceneScale zoom mode.
+     */
+    [[nodiscard]] virtual float getSceneScale() const noexcept = 0;
+    /**
+     * @brief Set the uniform scene-scale factor; baked into the view matrix on next update.
+     * A value of 1.0 (default) has no effect.
+     */
+    virtual void setSceneScale(float scale) noexcept = 0;
+
+    /**
+     * @brief Return the NDC→screen transform matrix for the given viewport size.
+     * Equivalent to vne::math::clipToScreenMatrix(width, height, getGraphicsApi()).
+     */
+    [[nodiscard]] virtual vne::math::Mat4f getClipToScreenMatrix(float width, float height) const noexcept = 0;
 
     /** @brief Get graphics API used for view/projection matrices (OpenGL, Vulkan, Metal, etc.). */
     [[nodiscard]] virtual vne::math::GraphicsApi getGraphicsApi() const noexcept = 0;

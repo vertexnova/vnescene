@@ -55,6 +55,7 @@ set(TEST_SOURCES
     camera_transform_adapter_test.cpp
     camera_gpu_test.cpp
     camera_graphics_api_test.cpp
+    camera_icamera_test.cpp
     light_gpu_test.cpp
     light_shadow_test.cpp
 )

@@ -29,6 +29,7 @@ set(HEADER_FILES
     ${VNE_INCLUDE_DIR}/vertexnova/scene/environment.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/gpu_types.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera.h
+    ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_base.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_types.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_utils.h
     ${VNE_INCLUDE_DIR}/vertexnova/scene/camera/camera_factory.h
