@@ -14,11 +14,12 @@
  * @file camera_base.h
  * @brief Shared state and logic for concrete camera implementations.
  *
- * CameraBase is a non-virtual protected base extracted to eliminate
- * duplication between PerspectiveCamera and OrthographicCamera.
- * It is intentionally NOT an ICamera subclass — it carries only data
- * and the shared implementations for position/target/up, dirty-flag
- * management, scene-scale, name, and active state.
+ * This header is part of the public scene API surface because
+ * PerspectiveCamera and OrthographicCamera (both public types) inherit
+ * from CameraBase. However, CameraBase itself is not a public polymorphic
+ * interface like ICamera — it carries only data and shared implementations
+ * for position/target/up, dirty-flag management, scene-scale, name, and
+ * active state. All constructors and members are protected.
  */
 
 #include "vertexnova/scene/export.h"

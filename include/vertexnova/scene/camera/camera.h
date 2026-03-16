@@ -18,7 +18,6 @@
 #include "vertexnova/scene/export.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
 #include <vertexnova/math/core/core.h>
-#include <vertexnova/math/projection_utils.h>
 #include <memory>
 #include <string>
 
@@ -112,9 +111,7 @@ class VNE_SCENE_API ICamera {
      * Default implementation delegates to vne::math::clipToScreenMatrix; override only
      * if the camera uses a non-standard screen-space convention.
      */
-    [[nodiscard]] virtual vne::math::Mat4f getClipToScreenMatrix(float width, float height) const noexcept {
-        return vne::math::clipToScreenMatrix(width, height, getGraphicsApi());
-    }
+    [[nodiscard]] virtual vne::math::Mat4f getClipToScreenMatrix(float width, float height) const noexcept;
 
     /** @brief Get graphics API used for view/projection matrices (OpenGL, Vulkan, Metal, etc.). */
     [[nodiscard]] virtual vne::math::GraphicsApi getGraphicsApi() const noexcept = 0;

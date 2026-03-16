@@ -225,7 +225,7 @@ void OrthographicCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 
 void OrthographicCamera::setSceneScale(float scale) noexcept {
     // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
-    scene_scale_ = (scale <= 0.0f) ? kMinSceneScale : scale;
+    scene_scale_ = std::max(kMinSceneScale, scale);
     view_matrix_dirty_ = true;
 }
 

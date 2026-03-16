@@ -19,7 +19,6 @@
 #include <cmath>
 #include "vertexnova/scene/camera/orthographic_camera.h"
 #include <vertexnova/math/core/core.h>
-#include <vertexnova/math/projection_utils.h>
 
 using namespace vne::scene;
 using namespace vne::math;

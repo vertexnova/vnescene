@@ -138,24 +138,34 @@ TEST(CameraBaseTest, LookAtImpl_ThreeArg_MarksViewMatrixDirty) {
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_KeepsPositionUnchanged) {
     TestCameraBaseHarness h;
-    h.callLookAtImpl(Vec3f(5.0f, 5.0f, 5.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-    EXPECT_NEAR(h.getPosition().x(), 5.0f, kTol);
-    EXPECT_NEAR(h.getPosition().y(), 5.0f, kTol);
-    EXPECT_NEAR(h.getPosition().z(), 5.0f, kTol);
+    // Establish a known position via the three-argument overload.
+    Vec3f initialPos(5.0f, 5.0f, 5.0f);
+    h.callLookAtImpl(initialPos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    // Call the two-argument overload; position must remain unchanged.
+    h.callLookAtImpl(Vec3f(1.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    EXPECT_NEAR(h.getPosition().x(), initialPos.x(), kTol);
+    EXPECT_NEAR(h.getPosition().y(), initialPos.y(), kTol);
+    EXPECT_NEAR(h.getPosition().z(), initialPos.z(), kTol);
 }
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_UpdatesTargetAndUp) {
     TestCameraBaseHarness h;
-    h.callLookAtImpl(Vec3f(1.0f, 0.0f, 0.0f), Vec3f(2.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-
-    Vec3f target(2.0f, 0.0f, 0.0f);
-    Vec3f up(0.0f, 1.0f, 0.0f);
-    EXPECT_NEAR(h.getTarget().x(), target.x(), kTol);
-    EXPECT_NEAR(h.getTarget().y(), target.y(), kTol);
-    EXPECT_NEAR(h.getTarget().z(), target.z(), kTol);
-    EXPECT_NEAR(h.getUp().x(), up.x(), kTol);
-    EXPECT_NEAR(h.getUp().y(), up.y(), kTol);
-    EXPECT_NEAR(h.getUp().z(), up.z(), kTol);
+    // Establish initial pose via the three-argument overload.
+    Vec3f pos(1.0f, 0.0f, 0.0f);
+    h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    // Call the two-argument overload; target and up must change, position must not.
+    Vec3f newTarget(2.0f, 0.0f, 0.0f);
+    Vec3f newUp(0.0f, 0.0f, 1.0f);
+    h.callLookAtImpl(newTarget, newUp);
+    EXPECT_NEAR(h.getTarget().x(), newTarget.x(), kTol);
+    EXPECT_NEAR(h.getTarget().y(), newTarget.y(), kTol);
+    EXPECT_NEAR(h.getTarget().z(), newTarget.z(), kTol);
+    EXPECT_NEAR(h.getUp().x(), newUp.x(), kTol);
+    EXPECT_NEAR(h.getUp().y(), newUp.y(), kTol);
+    EXPECT_NEAR(h.getUp().z(), newUp.z(), kTol);
+    EXPECT_NEAR(h.getPosition().x(), pos.x(), kTol);
+    EXPECT_NEAR(h.getPosition().y(), pos.y(), kTol);
+    EXPECT_NEAR(h.getPosition().z(), pos.z(), kTol);
 }
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_MarksViewMatrixDirty) {
