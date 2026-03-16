@@ -29,14 +29,15 @@ There is no dependency on a specific graphics API; camera and light data are pac
 
 ### Cameras
 
-- **camera.h**: `ICamera` — base interface (view/projection, position/target/up, name, active flag).
+- **camera.h**: `ICamera` — base interface (view/projection, position/target/up, name, active flag). Includes `resize`, `lookAt(position, target, up)` / `lookAt(target, up)`, `setClipPlanes`, `getSceneScale` / `setSceneScale`, and `getClipToScreenMatrix` for use across all camera types.
+- **camera_base.h**: `CameraBase` — protected shared base for `PerspectiveCamera` and `OrthographicCamera` (shared state and pose helpers); not part of the public polymorphic API.
 - **camera_types.h**: `CameraType`, `CameraParameters`, and related types.
-- **perspective_camera.h**: `PerspectiveCamera` — perspective projection, FOV, aspect, near/far.
-- **orthographic_camera.h**: `OrthographicCamera` — ortho projection and bounds.
+- **perspective_camera.h**: `PerspectiveCamera` — perspective projection, FOV, aspect, near/far; movement helpers (`getForward`, `moveForward`, `rotateAroundTarget`, etc.).
+- **orthographic_camera.h**: `OrthographicCamera` — ortho projection and bounds; `setBounds`, `getAspectRatio`.
 - **camera_factory.h**: `CameraFactory` — create cameras by type.
-- **camera_utils.h**: Utilities such as `fitToAabb`, `projectAabbCorners`, `screenToWorldRay`.
+- **camera_utils.h**: Utilities such as `fitToAabb`, `project`, `screenToWorldRay`.
 - **camera_gpu.h**: `CameraGpu` — packed layout for GPU (view/projection, position, etc.).
-- **camera_transform_adapter.h**: `CameraTransformAdapter` — sync camera from a transform node or sync a transform node from the camera.
+- **camera_transform_adapter.h**: `syncCameraFromTransformNode`, `syncTransformNodeFromCamera` — sync camera pose with a transform node.
 
 ### Lights
 
@@ -61,23 +62,20 @@ There is no dependency on a specific graphics API; camera and light data are pac
 #include <vertexnova/scene/scene.h>
 
 int main() {
-    auto camera = std::make_shared<vne::scene::PerspectiveCamera>(
-        /* position */ vne::math::Vec3f{0, 0, 5},
-        /* target   */ vne::math::Vec3f{0, 0, 0},
-        /* up      */ vne::math::Vec3f{0, 1, 0},
-        /* fovDeg  */ 60.0f,
-        /* aspect  */ 16.0f / 9.0f,
-        /* near    */ 0.1f,
-        /* far     */ 100.0f
-    );
+    using namespace vne::scene;
+    using namespace vne::math;
 
-    vne::scene::SceneState state;
+    auto camera = CameraFactory::createPerspective(
+        PerspectiveCameraParameters(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f));
+    camera->lookAt(Vec3f(0.0f, 0.0f, 5.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    camera->resize(800.0f, 600.0f);
+
+    SceneState state;
     state.setActiveCamera(camera);
-    state.addLight(std::make_shared<vne::scene::AmbientLight>(vne::math::Vec3f{0.2f}));
+    state.addLight(std::make_shared<AmbientLight>(Vec3f(0.2f)));
 
-    // Pack for GPU or pass to renderer
     if (state.hasActiveCamera()) {
-        vne::scene::CameraGpu cam_gpu = state.getActiveCamera()->toGpu();
+        CameraGpu cam_gpu = state.getActiveCamera()->toGpu();
         // ... upload cam_gpu to GPU
     }
     return 0;
