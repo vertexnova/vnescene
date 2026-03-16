@@ -10,7 +10,7 @@
  */
 
 /**
- * @file camera_icamera_test.cpp
+ * @file camera_test.cpp
  * @brief Tests for ICamera interface methods promoted in Phase 2.
  *
  * All tests operate via ICamera* to verify that the promoted API works
@@ -19,6 +19,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <cmath>
 #include "vertexnova/scene/camera/camera.h"
 #include "vertexnova/scene/camera/perspective_camera.h"
 #include "vertexnova/scene/camera/orthographic_camera.h"
@@ -47,7 +48,7 @@ OrthographicCamera makeOrtho() {
 // lookAt — three-argument form
 //==============================================================================
 
-TEST(ICameraTest, LookAt_ThreeArg_Perspective_SetsAllPose) {
+TEST(CameraTest, LookAt_ThreeArg_Perspective_SetsAllPose) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -70,7 +71,7 @@ TEST(ICameraTest, LookAt_ThreeArg_Perspective_SetsAllPose) {
     EXPECT_NEAR(view_individual[3][2], view_lookat[3][2], kTol);
 }
 
-TEST(ICameraTest, LookAt_ThreeArg_Ortho_SetsAllPose) {
+TEST(CameraTest, LookAt_ThreeArg_Ortho_SetsAllPose) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -89,7 +90,7 @@ TEST(ICameraTest, LookAt_ThreeArg_Ortho_SetsAllPose) {
 // lookAt — two-argument form (keeps position)
 //==============================================================================
 
-TEST(ICameraTest, LookAt_TwoArg_Perspective_KeepsPosition) {
+TEST(CameraTest, LookAt_TwoArg_Perspective_KeepsPosition) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -107,7 +108,7 @@ TEST(ICameraTest, LookAt_TwoArg_Perspective_KeepsPosition) {
     EXPECT_NEAR(c.getTarget().z(), 0.0f, kTol);
 }
 
-TEST(ICameraTest, LookAt_TwoArg_Ortho_KeepsPosition) {
+TEST(CameraTest, LookAt_TwoArg_Ortho_KeepsPosition) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -124,7 +125,7 @@ TEST(ICameraTest, LookAt_TwoArg_Ortho_KeepsPosition) {
 // setNearPlane / setFarPlane / setClipPlanes
 //==============================================================================
 
-TEST(ICameraTest, SetNearFar_ViaInterface_Perspective) {
+TEST(CameraTest, SetNearFar_ViaInterface_Perspective) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -135,7 +136,7 @@ TEST(ICameraTest, SetNearFar_ViaInterface_Perspective) {
     EXPECT_NEAR(c.getFarPlane(), 500.0f, kTol);
 }
 
-TEST(ICameraTest, SetNearFar_ViaInterface_Ortho) {
+TEST(CameraTest, SetNearFar_ViaInterface_Ortho) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -146,7 +147,7 @@ TEST(ICameraTest, SetNearFar_ViaInterface_Ortho) {
     EXPECT_NEAR(c.getFarPlane(), 200.0f, kTol);
 }
 
-TEST(ICameraTest, SetClipPlanes_ViaInterface_Perspective) {
+TEST(CameraTest, SetClipPlanes_ViaInterface_Perspective) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -155,7 +156,7 @@ TEST(ICameraTest, SetClipPlanes_ViaInterface_Perspective) {
     EXPECT_NEAR(c.getFarPlane(), 800.0f, kTol);
 }
 
-TEST(ICameraTest, SetClipPlanes_ViaInterface_Ortho) {
+TEST(CameraTest, SetClipPlanes_ViaInterface_Ortho) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -168,7 +169,7 @@ TEST(ICameraTest, SetClipPlanes_ViaInterface_Ortho) {
 // resize via ICamera interface
 //==============================================================================
 
-TEST(ICameraTest, Resize_ViaInterface_Perspective_UpdatesAspect) {
+TEST(CameraTest, Resize_ViaInterface_Perspective_UpdatesAspect) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -179,7 +180,7 @@ TEST(ICameraTest, Resize_ViaInterface_Perspective_UpdatesAspect) {
     EXPECT_NEAR(cam.getAspectRatio(), 1920.0f / 1080.0f, kTol);
 }
 
-TEST(ICameraTest, Resize_ViaInterface_Ortho_CentersBounds) {
+TEST(CameraTest, Resize_ViaInterface_Ortho_CentersBounds) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -195,17 +196,17 @@ TEST(ICameraTest, Resize_ViaInterface_Ortho_CentersBounds) {
 // setSceneScale / getSceneScale
 //==============================================================================
 
-TEST(ICameraTest, SceneScale_DefaultIsOne_Perspective) {
+TEST(CameraTest, SceneScale_DefaultIsOne_Perspective) {
     PerspectiveCamera cam = makePerspective();
     EXPECT_NEAR(cam.getSceneScale(), 1.0f, kTol);
 }
 
-TEST(ICameraTest, SceneScale_DefaultIsOne_Ortho) {
+TEST(CameraTest, SceneScale_DefaultIsOne_Ortho) {
     OrthographicCamera cam = makeOrtho();
     EXPECT_NEAR(cam.getSceneScale(), 1.0f, kTol);
 }
 
-TEST(ICameraTest, SceneScale_BakedIntoViewMatrix_Perspective) {
+TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Perspective) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -219,10 +220,10 @@ TEST(ICameraTest, SceneScale_BakedIntoViewMatrix_Perspective) {
     Mat4f view_scaled = c.getViewMatrix();
     // A uniform scale of 2 doubles the translation components in the view matrix.
     // The translation row (column 3 for column-major) should differ.
-    EXPECT_FALSE(std::abs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
+    EXPECT_FALSE(std::fabs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
 }
 
-TEST(ICameraTest, SceneScale_BakedIntoViewMatrix_Ortho) {
+TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Ortho) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -234,10 +235,10 @@ TEST(ICameraTest, SceneScale_BakedIntoViewMatrix_Ortho) {
     EXPECT_NEAR(c.getSceneScale(), 3.0f, kTol);
 
     Mat4f view_scaled = c.getViewMatrix();
-    EXPECT_FALSE(std::abs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
+    EXPECT_FALSE(std::fabs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
 }
 
-TEST(ICameraTest, SceneScale_ResetToOne_Perspective) {
+TEST(CameraTest, SceneScale_ResetToOne_Perspective) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -261,7 +262,7 @@ TEST(ICameraTest, SceneScale_ResetToOne_Perspective) {
 // getClipToScreenMatrix
 //==============================================================================
 
-TEST(ICameraTest, ClipToScreenMatrix_CenterNDC_Perspective) {
+TEST(CameraTest, ClipToScreenMatrix_CenterNDC_Perspective) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -273,7 +274,7 @@ TEST(ICameraTest, ClipToScreenMatrix_CenterNDC_Perspective) {
     EXPECT_NEAR(screen.y(), 300.0f, kTol);
 }
 
-TEST(ICameraTest, ClipToScreenMatrix_CenterNDC_Ortho) {
+TEST(CameraTest, ClipToScreenMatrix_CenterNDC_Ortho) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
@@ -285,7 +286,7 @@ TEST(ICameraTest, ClipToScreenMatrix_CenterNDC_Ortho) {
     EXPECT_NEAR(screen.y(), 300.0f, kTol);
 }
 
-TEST(ICameraTest, ClipToScreenMatrix_MatchesFreeFunctionResult) {
+TEST(CameraTest, ClipToScreenMatrix_MatchesFreeFunctionResult) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
@@ -299,7 +300,7 @@ TEST(ICameraTest, ClipToScreenMatrix_MatchesFreeFunctionResult) {
     }
 }
 
-TEST(ICameraTest, ClipToScreenMatrix_ApiDifference_MetalYFlip) {
+TEST(CameraTest, ClipToScreenMatrix_ApiDifference_MetalYFlip) {
     PerspectiveCamera cam_gl = makePerspective();
     PerspectiveCamera cam_metal = makePerspective();
     cam_metal.setGraphicsApi(GraphicsApi::eMetal);
