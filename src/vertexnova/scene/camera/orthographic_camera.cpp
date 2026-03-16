@@ -25,31 +25,32 @@ namespace {
 constexpr float kHalf = 0.5f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
+constexpr float kMinSceneScale = 1e-4f;
 
 }  // namespace
 
 OrthographicCamera::OrthographicCamera(
     float left, float right, float bottom, float top, float near_plane, float far_plane, std::string name)
-    : left_(left)
+    : CameraBase(std::move(name))
+    , left_(left)
     , right_(right)
     , bottom_(bottom)
     , top_(top)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
 }
 
 OrthographicCamera::OrthographicCamera(float width, float height, float near_plane, float far_plane, std::string name)
-    : left_(-width * kHalf)
+    : CameraBase(std::move(name))
+    , left_(-width * kHalf)
     , right_(width * kHalf)
     , bottom_(-height * kHalf)
     , top_(height * kHalf)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -223,7 +224,8 @@ void OrthographicCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 }
 
 void OrthographicCamera::setSceneScale(float scale) noexcept {
-    scene_scale_ = scale;
+    // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
+    scene_scale_ = (scale <= 0.0f) ? kMinSceneScale : scale;
     view_matrix_dirty_ = true;
 }
 

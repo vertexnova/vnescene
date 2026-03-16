@@ -161,5 +161,5 @@ TEST(OrthographicCameraTest, SetSceneScale_BakesIntoViewMatrix) {
     Mat4f view_unscaled = cam.getViewMatrix();
     cam.setSceneScale(3.0f);
     Mat4f view_scaled = cam.getViewMatrix();
-    EXPECT_FALSE(std::fabs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
+    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
 }

@@ -27,15 +27,16 @@ constexpr float kMaxFovDeg = 179.0f;
 constexpr float kMinAspectRatio = 0.1f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
+constexpr float kMinSceneScale = 1e-4f;
 
 }  // namespace
 
 PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_plane, float far_plane, std::string name)
-    : fov_(fov)
+    : CameraBase(std::move(name))
+    , fov_(fov)
     , aspect_ratio_(aspect_ratio)
     , near_plane_(near_plane)
     , far_plane_(far_plane) {
-    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -43,13 +44,13 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_p
 
 PerspectiveCamera::PerspectiveCamera(
     float fov, float width, float height, float near_plane, float far_plane, std::string name)
-    : fov_(fov)
+    : CameraBase(std::move(name))
+    , fov_(fov)
     , aspect_ratio_(width / height)
     , near_plane_(near_plane)
     , far_plane_(far_plane)
     , width_(width)
     , height_(height) {
-    name_ = std::move(name);
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -208,7 +209,8 @@ void PerspectiveCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 }
 
 void PerspectiveCamera::setSceneScale(float scale) noexcept {
-    scene_scale_ = scale;
+    // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
+    scene_scale_ = (scale <= 0.0f) ? kMinSceneScale : scale;
     view_matrix_dirty_ = true;
 }
 

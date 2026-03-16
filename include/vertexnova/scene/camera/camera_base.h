@@ -39,6 +39,8 @@ namespace vne::scene {
 class VNE_SCENE_API CameraBase {
    protected:
     CameraBase() = default;
+    explicit CameraBase(std::string name) noexcept
+        : name_(std::move(name)) {}
     ~CameraBase() noexcept = default;
 
     // Copy/move defaulted; concrete cameras manage their own copy/move semantics.

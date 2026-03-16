@@ -219,7 +219,7 @@ TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Perspective) {
     Mat4f view_scaled = c.getViewMatrix();
     // A uniform scale of 2 doubles the translation components in the view matrix.
     // The translation row (column 3 for column-major) should differ.
-    EXPECT_FALSE(std::fabs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
+    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
 }
 
 TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Ortho) {
@@ -234,7 +234,7 @@ TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Ortho) {
     EXPECT_NEAR(c.getSceneScale(), 3.0f, kTol);
 
     Mat4f view_scaled = c.getViewMatrix();
-    EXPECT_FALSE(std::fabs(view_scaled[3][2] - view_unscaled[3][2]) < kTol);
+    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
 }
 
 TEST(CameraTest, SceneScale_ResetToOne_Perspective) {
