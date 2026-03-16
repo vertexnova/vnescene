@@ -169,27 +169,24 @@ TEST(CameraTest, SetClipPlanes_ViaInterface_Ortho) {
 // resize via ICamera interface
 //==============================================================================
 
-TEST(CameraTest, Resize_ViaInterface_Perspective_UpdatesAspect) {
+TEST(CameraTest, Resize_ViaInterface_Perspective_UpdatesViewportSize) {
     PerspectiveCamera cam = makePerspective();
     ICamera& c = cam;
 
     c.resize(1920.0f, 1080.0f);
 
-    EXPECT_NEAR(cam.getWidth(), 1920.0f, kTol);
-    EXPECT_NEAR(cam.getHeight(), 1080.0f, kTol);
-    EXPECT_NEAR(cam.getAspectRatio(), 1920.0f / 1080.0f, kTol);
+    EXPECT_NEAR(c.getWidth(), 1920.0f, kTol);
+    EXPECT_NEAR(c.getHeight(), 1080.0f, kTol);
 }
 
-TEST(CameraTest, Resize_ViaInterface_Ortho_CentersBounds) {
+TEST(CameraTest, Resize_ViaInterface_Ortho_UpdatesFrustumSize) {
     OrthographicCamera cam = makeOrtho();
     ICamera& c = cam;
 
     c.resize(400.0f, 300.0f);
 
-    EXPECT_NEAR(cam.getLeft(), -200.0f, kTol);
-    EXPECT_NEAR(cam.getRight(), 200.0f, kTol);
-    EXPECT_NEAR(cam.getBottom(), -150.0f, kTol);
-    EXPECT_NEAR(cam.getTop(), 150.0f, kTol);
+    EXPECT_NEAR(c.getWidth(), 400.0f, kTol);
+    EXPECT_NEAR(c.getHeight(), 300.0f, kTol);
 }
 
 //==============================================================================
@@ -198,12 +195,14 @@ TEST(CameraTest, Resize_ViaInterface_Ortho_CentersBounds) {
 
 TEST(CameraTest, SceneScale_DefaultIsOne_Perspective) {
     PerspectiveCamera cam = makePerspective();
-    EXPECT_NEAR(cam.getSceneScale(), 1.0f, kTol);
+    ICamera& c = cam;
+    EXPECT_NEAR(c.getSceneScale(), 1.0f, kTol);
 }
 
 TEST(CameraTest, SceneScale_DefaultIsOne_Ortho) {
     OrthographicCamera cam = makeOrtho();
-    EXPECT_NEAR(cam.getSceneScale(), 1.0f, kTol);
+    ICamera& c = cam;
+    EXPECT_NEAR(c.getSceneScale(), 1.0f, kTol);
 }
 
 TEST(CameraTest, SceneScale_BakedIntoViewMatrix_Perspective) {
