@@ -28,6 +28,7 @@ constexpr float kMinAspectRatio = 0.1f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
 constexpr float kMinSceneScale = 1e-4f;
+constexpr float kEpsilon = 1e-6f;
 
 }  // namespace
 
@@ -249,15 +250,32 @@ void PerspectiveCamera::moveUp(float distance) noexcept {
 }
 
 void PerspectiveCamera::rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept {
-    float yaw_rad = degToRad(yaw_angle);
-    float pitch_rad = degToRad(pitch_angle);
+    const float yaw_rad = degToRad(yaw_angle);
+    const float pitch_rad = degToRad(pitch_angle);
     Vec3f direction = position_ - target_;
-    float dist = direction.length();
-    Mat4f yaw_rot = Mat4f::rotateY(yaw_rad);
-    Mat4f pitch_rot = Mat4f::rotateX(pitch_rad);
-    Mat4f combined = pitch_rot * yaw_rot;
-    Vec3f rotated_dir = combined.transformVector(direction);
-    position_ = target_ + rotated_dir.normalized() * dist;
+    const float dist = direction.length();
+    if (dist < kEpsilon) {
+        return;
+    }
+    direction /= dist;
+
+    // Yaw around current up, then pitch around horizontal right *after* yaw (orbit convention).
+    const Quatf yaw_q = Quatf::fromAxisAngle(up_, yaw_rad);
+    direction = yaw_q.rotate(direction);
+
+    Vec3f right = direction.cross(up_);
+    float right_len = right.length();
+    if (right_len < kEpsilon) {
+        right = Vec3f(1.0f, 0.0f, 0.0f);
+    } else {
+        right /= right_len;
+    }
+
+    const Quatf pitch_q = Quatf::fromAxisAngle(right, pitch_rad);
+    direction = pitch_q.rotate(direction);
+    // Pitch rotates direction and up in the plane perpendicular to right; keeps up orthogonal to direction.
+    up_ = pitch_q.rotate(up_).normalized();
+    position_ = target_ + direction * dist;
     view_matrix_dirty_ = true;
 }
 

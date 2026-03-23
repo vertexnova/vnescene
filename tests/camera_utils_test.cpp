@@ -142,8 +142,8 @@ TEST(CameraUtils, FitToAABB_ProjectsInsideNDC) {
     const float ndc_max = 1.0f + ndc_tolerance;
 
     // Project all 8 AABB corners and verify each falls within NDC [-1, 1] x [-1, 1]
-    for (unsigned int i = 0; i < 8; ++i) {
-        Vec3f corner = aabb.corner(static_cast<uint32_t>(i));
+    for (uint32_t i = 0; i < 8u; ++i) {
+        Vec3f corner = aabb.corner(i);
         Vec3f screen = project(*cam, corner, viewport_w, viewport_h);
         float ndc_x = (screen.x() / viewport_w) * 2.0f - 1.0f;
         float ndc_y = (screen.y() / viewport_h) * 2.0f - 1.0f;

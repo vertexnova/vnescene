@@ -133,6 +133,8 @@ class VNE_SCENE_API OrthographicCamera : public ICamera, protected CameraBase {
     [[nodiscard]] float getHeight() const noexcept override { return top_ - bottom_; }
     /** @brief Get aspect ratio (width / height). */
     [[nodiscard]] float getAspectRatio() const noexcept;
+    /** @brief Get camera projection type. */
+    [[nodiscard]] CameraType getCameraType() const noexcept override { return CameraType::eOrthographic; }
     /** @brief Get graphics API for view/projection. */
     [[nodiscard]] vne::math::GraphicsApi getGraphicsApi() const noexcept override { return graphics_api_; }
     /** @brief Set graphics API; marks matrices dirty so they are rebuilt. */

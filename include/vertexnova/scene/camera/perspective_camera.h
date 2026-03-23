@@ -121,6 +121,8 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     [[nodiscard]] float getWidth() const noexcept override { return width_; }
     /** @brief Get viewport height. */
     [[nodiscard]] float getHeight() const noexcept override { return height_; }
+    /** @brief Get camera projection type. */
+    [[nodiscard]] CameraType getCameraType() const noexcept override { return CameraType::ePerspective; }
     /** @brief Get graphics API for view/projection. */
     [[nodiscard]] vne::math::GraphicsApi getGraphicsApi() const noexcept override { return graphics_api_; }
     /** @brief Set graphics API; marks matrices dirty so they are rebuilt. */
