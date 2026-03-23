@@ -44,6 +44,18 @@ OrthographicCamera makeOrtho() {
 
 }  // namespace
 
+TEST(CameraTest, GetCameraType_Perspective_ReturnsPerspective) {
+    PerspectiveCamera cam = makePerspective();
+    ICamera& c = cam;
+    EXPECT_EQ(c.getCameraType(), CameraType::ePerspective);
+}
+
+TEST(CameraTest, GetCameraType_Orthographic_ReturnsOrthographic) {
+    OrthographicCamera cam = makeOrtho();
+    ICamera& c = cam;
+    EXPECT_EQ(c.getCameraType(), CameraType::eOrthographic);
+}
+
 //==============================================================================
 // lookAt — three-argument form
 //==============================================================================

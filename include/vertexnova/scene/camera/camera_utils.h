@@ -49,20 +49,25 @@ namespace vne::scene {
  * @param y_px Screen y in pixels.
  * @param viewport_width Viewport width in pixels.
  * @param viewport_height Viewport height in pixels.
- * @param api Graphics API for Y-flip (default OpenGL).
+ * @param api Graphics API for Y-flip.
  * @return World-space ray from camera through the screen point.
  */
-[[nodiscard]] inline vne::math::Ray screenToWorldRay(
-    const ICamera& camera,
-    float x_px,
-    float y_px,
-    float viewport_width,
-    float viewport_height,
-    vne::math::GraphicsApi api = vne::math::GraphicsApi::eOpenGL) noexcept {
+[[nodiscard]] inline vne::math::Ray screenToWorldRay(const ICamera& camera,
+                                                     float x_px,
+                                                     float y_px,
+                                                     float viewport_width,
+                                                     float viewport_height,
+                                                     vne::math::GraphicsApi api) noexcept {
     vne::math::Mat4f vp = camera.getViewProjectionMatrix();
     vne::math::Mat4f inv_vp = vp.inverse();
     vne::math::Viewport vp_port(viewport_width, viewport_height);
     return vne::math::screenToWorldRay(vne::math::Vec2f(x_px, y_px), inv_vp, vp_port, camera.getPosition(), api);
+}
+
+/** @brief Overload using the camera's own GraphicsApi (multibackend-safe). */
+[[nodiscard]] inline vne::math::Ray screenToWorldRay(
+    const ICamera& camera, float x_px, float y_px, float viewport_width, float viewport_height) noexcept {
+    return screenToWorldRay(camera, x_px, y_px, viewport_width, viewport_height, camera.getGraphicsApi());
 }
 
 /**
@@ -80,16 +85,24 @@ VNE_SCENE_API void fitToAabb(PerspectiveCamera& cam, const vne::math::Aabb& aabb
  * @param world_pos World-space point.
  * @param viewport_width Viewport width in pixels.
  * @param viewport_height Viewport height in pixels.
- * @param api Graphics API (default OpenGL).
+ * @param api Graphics API for projection to screen space.
  * @return Screen (x, y) and depth component.
  */
 [[nodiscard]] inline vne::math::Vec3f project(const ICamera& camera,
                                               const vne::math::Vec3f& world_pos,
                                               float viewport_width,
                                               float viewport_height,
-                                              vne::math::GraphicsApi api = vne::math::GraphicsApi::eOpenGL) noexcept {
+                                              vne::math::GraphicsApi api) noexcept {
     vne::math::Mat4f vp = camera.getViewProjectionMatrix();
     return vne::math::project(world_pos, vp, vne::math::Viewport(viewport_width, viewport_height), api);
+}
+
+/** @brief Overload using the camera's own GraphicsApi (multibackend-safe). */
+[[nodiscard]] inline vne::math::Vec3f project(const ICamera& camera,
+                                              const vne::math::Vec3f& world_pos,
+                                              float viewport_width,
+                                              float viewport_height) noexcept {
+    return project(camera, world_pos, viewport_width, viewport_height, camera.getGraphicsApi());
 }
 
 /**
@@ -98,17 +111,25 @@ VNE_SCENE_API void fitToAabb(PerspectiveCamera& cam, const vne::math::Aabb& aabb
  * @param screen_pos Screen (x, y) and depth (e.g. 0 = near, 1 = far).
  * @param viewport_width Viewport width in pixels.
  * @param viewport_height Viewport height in pixels.
- * @param api Graphics API (default OpenGL).
+ * @param api Graphics API for depth range and Y convention.
  * @return World-space position.
  */
 [[nodiscard]] inline vne::math::Vec3f unproject(const ICamera& camera,
                                                 const vne::math::Vec3f& screen_pos,
                                                 float viewport_width,
                                                 float viewport_height,
-                                                vne::math::GraphicsApi api = vne::math::GraphicsApi::eOpenGL) noexcept {
+                                                vne::math::GraphicsApi api) noexcept {
     vne::math::Mat4f vp = camera.getViewProjectionMatrix();
     vne::math::Mat4f inv_vp = vp.inverse();
     return vne::math::unproject(screen_pos, inv_vp, vne::math::Viewport(viewport_width, viewport_height), api);
+}
+
+/** @brief Overload using the camera's own GraphicsApi (multibackend-safe). */
+[[nodiscard]] inline vne::math::Vec3f unproject(const ICamera& camera,
+                                                const vne::math::Vec3f& screen_pos,
+                                                float viewport_width,
+                                                float viewport_height) noexcept {
+    return unproject(camera, screen_pos, viewport_width, viewport_height, camera.getGraphicsApi());
 }
 
 }  // namespace vne::scene

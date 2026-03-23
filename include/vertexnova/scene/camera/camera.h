@@ -17,6 +17,7 @@
 
 #include "vertexnova/scene/export.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
+#include "vertexnova/scene/camera/camera_types.h"
 #include <vertexnova/math/core/core.h>
 #include <memory>
 #include <string>
@@ -113,6 +114,8 @@ class VNE_SCENE_API ICamera {
      */
     [[nodiscard]] virtual vne::math::Mat4f getClipToScreenMatrix(float width, float height) const noexcept;
 
+    /** @brief Get camera projection type (perspective or orthographic). */
+    [[nodiscard]] virtual CameraType getCameraType() const noexcept = 0;
     /** @brief Get graphics API used for view/projection matrices (OpenGL, Vulkan, Metal, etc.). */
     [[nodiscard]] virtual vne::math::GraphicsApi getGraphicsApi() const noexcept = 0;
     /** @brief Set graphics API; view and projection are rebuilt for the chosen backend. */
