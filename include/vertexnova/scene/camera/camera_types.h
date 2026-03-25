@@ -31,6 +31,11 @@ enum class CameraType : std::uint8_t {
     eOrthographic = 1,  //!< Orthographic (parallel) projection.
 };
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4251)  // std::string / vnemath types in exported struct (see export.h)
+#endif
+
 /**
  * @struct CameraParameters
  * @brief Base parameters common to all cameras.
@@ -122,5 +127,9 @@ struct VNE_SCENE_API OrthographicCameraParameters : CameraParameters {
         top = half_height;
     }
 };
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 }  // namespace vne::scene
