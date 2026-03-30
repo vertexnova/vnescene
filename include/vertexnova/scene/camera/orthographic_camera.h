@@ -149,9 +149,9 @@ class VNE_SCENE_API OrthographicCamera : public ICamera, protected CameraBase {
     /** @brief Keep current position; set target and up; one dirty mark. */
     void lookAt(const vne::math::Vec3f& target, const vne::math::Vec3f& up) noexcept override;
 
-    /** @brief Get scene-scale factor baked into the view matrix. */
+    /** @brief XY scene zoom factor baked into the view matrix (see CameraBase::composeViewWithSceneScale). */
     [[nodiscard]] float getSceneScale() const noexcept override { return scene_scale_; }
-    /** @brief Set scene-scale factor; marks view matrix dirty. */
+    /** @brief Set XY scene zoom; marks view matrix dirty only. */
     void setSceneScale(float scale) noexcept override;
 
     /** @brief Return NDC→screen matrix for the given viewport size. */

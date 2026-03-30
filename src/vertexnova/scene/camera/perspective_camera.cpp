@@ -92,10 +92,8 @@ Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
 }
 
 void PerspectiveCamera::updateViewMatrixImpl() noexcept {
-    view_matrix_ = Mat4f::lookAt(position_, target_, up_, graphics_api_);
-    if (scene_scale_ != 1.0f) {
-        view_matrix_ = Mat4f::scale(scene_scale_, scene_scale_, scene_scale_) * view_matrix_;
-    }
+    const Mat4f look_at = Mat4f::lookAt(position_, target_, up_, graphics_api_);
+    view_matrix_ = composeViewWithSceneScale(look_at, scene_scale_);
     view_matrix_dirty_ = false;
 }
 

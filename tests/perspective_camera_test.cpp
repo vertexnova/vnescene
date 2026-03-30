@@ -214,5 +214,24 @@ TEST(PerspectiveCameraTest, SetSceneScale_BakesIntoViewMatrix) {
     Mat4f view_unscaled = cam.getViewMatrix();
     cam.setSceneScale(2.0f);
     Mat4f view_scaled = cam.getViewMatrix();
-    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
+    // XY-only scale multiplies matrix rows 0 and 1; row 2 (e.g. [3][2]) is unchanged.
+    EXPECT_GT(std::fabs(view_scaled[0][0] - view_unscaled[0][0]), kTol);
+}
+
+TEST(PerspectiveCameraTest, SceneScale_ProjectionIndependentOfSceneScale) {
+    PerspectiveCamera cam_a = makePerspective();
+    cam_a.setSceneScale(1.0f);
+    cam_a.updateProjectionMatrix();
+    Mat4f proj_a = cam_a.getProjectionMatrix();
+
+    PerspectiveCamera cam_b = makePerspective();
+    cam_b.setSceneScale(4.0f);
+    cam_b.updateProjectionMatrix();
+    Mat4f proj_b = cam_b.getProjectionMatrix();
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        for (std::size_t r = 0; r < 4; ++r) {
+            EXPECT_NEAR(proj_a[c][r], proj_b[c][r], kTol);
+        }
+    }
 }
