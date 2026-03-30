@@ -160,5 +160,23 @@ TEST(OrthographicCameraTest, SetSceneScale_BakesIntoViewMatrix) {
     Mat4f view_unscaled = cam.getViewMatrix();
     cam.setSceneScale(3.0f);
     Mat4f view_scaled = cam.getViewMatrix();
-    EXPECT_GT(std::fabs(view_scaled[3][2] - view_unscaled[3][2]), kTol);
+    EXPECT_GT(std::fabs(view_scaled[0][0] - view_unscaled[0][0]), kTol);
+}
+
+TEST(OrthographicCameraTest, Projection_IndependentOfSceneScale) {
+    OrthographicCamera cam_a = makeOrtho();
+    cam_a.setSceneScale(1.0f);
+    cam_a.updateProjectionMatrix();
+    Mat4f proj_a = cam_a.getProjectionMatrix();
+
+    OrthographicCamera cam_b = makeOrtho();
+    cam_b.setSceneScale(3.0f);
+    cam_b.updateProjectionMatrix();
+    Mat4f proj_b = cam_b.getProjectionMatrix();
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        for (std::size_t r = 0; r < 4; ++r) {
+            EXPECT_NEAR(proj_a[c][r], proj_b[c][r], kTol);
+        }
+    }
 }

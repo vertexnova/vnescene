@@ -61,3 +61,14 @@ TEST(CameraGpu, Packing_ViewProjConsistency) {
         EXPECT_NEAR(exp.w(), got.w(), kTolerance);
     }
 }
+
+TEST(CameraGpu, Packing_NearFarMatchStoredClipWhenSceneScale) {
+    PerspectiveCameraParameters params(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+    auto cam = CameraFactory::createPerspective(params);
+    cam->setSceneScale(2.0f);
+    cam->updateMatrices();
+
+    CameraGpu gpu = cam->toGpu();
+    EXPECT_NEAR(gpu.position_near.w, cam->getNearPlane(), kTolerance);
+    EXPECT_NEAR(gpu.far_viewport.x, cam->getFarPlane(), kTolerance);
+}

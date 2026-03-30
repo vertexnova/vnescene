@@ -71,6 +71,23 @@ class VNE_SCENE_API CameraBase {
         view_matrix_dirty_ = true;
     }
 
+    /**
+     * @brief Apply scene zoom in the image plane after lookAt.
+     *
+     * Uses scale(s, s, 1) so view-space depth is not scaled; projection near/far stay consistent
+     * with geometry (uniform scale(s,s,s) on the view broke clip-space depth).
+     *
+     * @param look_at_view View matrix from Mat4f::lookAt (no scene scale applied yet).
+     * @param scene_scale XY scale factor; 1.0 returns @a look_at_view unchanged.
+     */
+    [[nodiscard]] static vne::math::Mat4f composeViewWithSceneScale(const vne::math::Mat4f& look_at_view,
+                                                                    float scene_scale) noexcept {
+        if (scene_scale == 1.0f) {
+            return look_at_view;
+        }
+        return vne::math::Mat4f::scale(scene_scale, scene_scale, 1.0f) * look_at_view;
+    }
+
     //--------------------------------------------------------------------------
     // Shared member state
     //--------------------------------------------------------------------------
@@ -81,7 +98,7 @@ class VNE_SCENE_API CameraBase {
     std::string name_;                             //!< Camera name.
     bool active_ = true;                           //!< Whether this camera is active for rendering.
     vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};  //!< Backend for view/projection.
-    float scene_scale_ = 1.0f;  //!< Uniform scale baked into the view matrix (eSceneScale zoom).
+    float scene_scale_ = 1.0f;  //!< XY zoom factor baked into the view (see composeViewWithSceneScale).
 
     mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};             //!< Cached view matrix.
     mutable vne::math::Mat4f projection_matrix_{vne::math::Mat4f::identity()};       //!< Cached projection matrix.
