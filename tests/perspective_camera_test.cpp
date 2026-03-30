@@ -218,7 +218,7 @@ TEST(PerspectiveCameraTest, SetSceneScale_BakesIntoViewMatrix) {
     EXPECT_GT(std::fabs(view_scaled[0][0] - view_unscaled[0][0]), kTol);
 }
 
-TEST(PerspectiveCameraTest, SceneScale_ProjectionIndependentOfSceneScale) {
+TEST(PerspectiveCameraTest, Projection_IndependentOfSceneScale) {
     PerspectiveCamera cam_a = makePerspective();
     cam_a.setSceneScale(1.0f);
     cam_a.updateProjectionMatrix();

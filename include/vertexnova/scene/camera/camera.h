@@ -99,11 +99,17 @@ class VNE_SCENE_API ICamera {
     /**
      * @brief Scene zoom factor (XY) applied in view space after lookAt (scale(s,s,1)).
      * Used by vneinteraction's eSceneScale zoom mode.
+     * @return The stored scale after any clamping applied in setSceneScale().
      */
     [[nodiscard]] virtual float getSceneScale() const noexcept = 0;
     /**
      * @brief Set XY scene zoom; view-space depth is not scaled so near/far clip planes stay valid.
      * A value of 1.0 (default) has no effect.
+     *
+     * Concrete implementations clamp @p scale to at least a small positive minimum (currently
+     * @c 1e-4f in PerspectiveCamera and OrthographicCamera): non-positive values and values
+     * below that minimum are raised, so the stored scale is always in <tt>[1e-4f, +inf)</tt>.
+     * Use getSceneScale() to read the effective value.
      */
     virtual void setSceneScale(float scale) noexcept = 0;
 
