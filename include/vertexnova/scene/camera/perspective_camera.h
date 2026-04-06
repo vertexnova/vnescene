@@ -73,6 +73,13 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     /** @brief Set up vector. */
     void setUp(const vne::math::Vec3f& up) noexcept override;
 
+    [[nodiscard]] vne::math::Quatf getOrientation() const noexcept override;
+    void setOrientationView(const vne::math::Vec3f& position,
+                            const vne::math::Quatf& orientation) noexcept override;
+    [[nodiscard]] vne::math::Vec3f getForwardDir() const noexcept override;
+    [[nodiscard]] vne::math::Vec3f getRightDir() const noexcept override;
+    [[nodiscard]] vne::math::Vec3f getUpDir() const noexcept override;
+
     /** @brief Get current view matrix. */
     [[nodiscard]] vne::math::Mat4f getViewMatrix() const noexcept override;
     /** @brief Recompute view matrix from position/target/up. */

@@ -162,16 +162,17 @@ TEST(PerspectiveCameraTest, GetRight_PerpendicularToForwardAndUp) {
     EXPECT_NEAR(dot, 0.0f, kTol);
 }
 
-TEST(PerspectiveCameraTest, MoveForward_TranslatesPositionAndTarget) {
+TEST(PerspectiveCameraTest, MoveForward_TranslatesPositionDerivedTargetFollows) {
     PerspectiveCamera cam = makePerspective();
     cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
     cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
     cam.moveForward(2.0f);
     EXPECT_NEAR(cam.getPosition().z(), 3.0f, kTol);
+    // Orientation unchanged; look distance preserved → derived target moves with eye.
     EXPECT_NEAR(cam.getTarget().z(), -2.0f, kTol);
 }
 
-TEST(PerspectiveCameraTest, MoveRight_TranslatesPositionAndTarget) {
+TEST(PerspectiveCameraTest, MoveRight_TranslatesPositionDerivedTargetFollows) {
     PerspectiveCamera cam = makePerspective();
     cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
     cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
@@ -180,7 +181,7 @@ TEST(PerspectiveCameraTest, MoveRight_TranslatesPositionAndTarget) {
     EXPECT_NEAR(cam.getTarget().x(), 1.0f, kTol);
 }
 
-TEST(PerspectiveCameraTest, MoveUp_TranslatesPositionAndTarget) {
+TEST(PerspectiveCameraTest, MoveUp_TranslatesPositionDerivedTargetFollows) {
     PerspectiveCamera cam = makePerspective();
     cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
     cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
@@ -234,4 +235,28 @@ TEST(PerspectiveCameraTest, Projection_IndependentOfSceneScale) {
             EXPECT_NEAR(proj_a[c][r], proj_b[c][r], kTol);
         }
     }
+}
+
+TEST(PerspectiveCameraTest, GetForwardDir_MatchesNormalizedTargetMinusPosition) {
+    PerspectiveCamera cam = makePerspective();
+    cam.lookAt(Vec3f(2.0f, 0.0f, 0.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    cam.updateMatrices();
+    Vec3f a = cam.getForwardDir();
+    Vec3f b = (cam.getTarget() - cam.getPosition()).normalized();
+    EXPECT_NEAR(a.x(), b.x(), kTol);
+    EXPECT_NEAR(a.y(), b.y(), kTol);
+    EXPECT_NEAR(a.z(), b.z(), kTol);
+}
+
+TEST(PerspectiveCameraTest, SetOrientationView_RoundTripOrientation) {
+    PerspectiveCamera cam = makePerspective();
+    Quatf q = Quatf::fromAxisAngle(Vec3f(0.0f, 1.0f, 0.0f), 0.5f);
+    q = q.normalized();
+    cam.setOrientationView(Vec3f(1.0f, 2.0f, 3.0f), q);
+    Quatf got = cam.getOrientation().normalized();
+    EXPECT_NEAR(got.x, q.x, kTol);
+    EXPECT_NEAR(got.y, q.y, kTol);
+    EXPECT_NEAR(got.z, q.z, kTol);
+    EXPECT_NEAR(got.w, q.w, kTol);
+    EXPECT_NEAR(cam.getPosition().x(), 1.0f, kTol);
 }

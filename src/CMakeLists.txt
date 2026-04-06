@@ -10,6 +10,7 @@
 
 set(SOURCE_FILES
     vertexnova/scene/camera/camera.cpp
+    vertexnova/scene/camera/camera_base.cpp
     vertexnova/scene/camera/perspective_camera.cpp
     vertexnova/scene/camera/orthographic_camera.cpp
     vertexnova/scene/camera/camera_factory.cpp

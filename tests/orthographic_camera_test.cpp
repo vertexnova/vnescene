@@ -180,3 +180,26 @@ TEST(OrthographicCameraTest, Projection_IndependentOfSceneScale) {
         }
     }
 }
+
+TEST(OrthographicCameraTest, GetForwardDir_MatchesNormalizedTargetMinusPosition) {
+    OrthographicCamera cam = makeOrtho();
+    cam.lookAt(Vec3f(0.0f, 0.0f, 10.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    cam.updateMatrices();
+    Vec3f a = cam.getForwardDir();
+    Vec3f b = (cam.getTarget() - cam.getPosition()).normalized();
+    EXPECT_NEAR(a.x(), b.x(), kTol);
+    EXPECT_NEAR(a.y(), b.y(), kTol);
+    EXPECT_NEAR(a.z(), b.z(), kTol);
+}
+
+TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
+    OrthographicCamera cam = makeOrtho();
+    Quatf q = Quatf::fromAxisAngle(Vec3f(1.0f, 0.0f, 0.0f), 0.3f);
+    q = q.normalized();
+    cam.setOrientationView(Vec3f(0.0f, 5.0f, 10.0f), q);
+    Quatf got = cam.getOrientation().normalized();
+    EXPECT_NEAR(got.x, q.x, kTol);
+    EXPECT_NEAR(got.y, q.y, kTol);
+    EXPECT_NEAR(got.z, q.z, kTol);
+    EXPECT_NEAR(got.w, q.w, kTol);
+}

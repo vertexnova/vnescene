@@ -67,21 +67,40 @@ void PerspectiveCamera::setPosition(const Vec3f& position) noexcept {
 }
 
 Vec3f PerspectiveCamera::getTarget() const noexcept {
-    return target_;
+    return targetImpl();
 }
 
 void PerspectiveCamera::setTarget(const Vec3f& target) noexcept {
-    target_ = target;
-    view_matrix_dirty_ = true;
+    setTargetImpl(target);
 }
 
 Vec3f PerspectiveCamera::getUp() const noexcept {
-    return up_;
+    return up_hint_;
 }
 
 void PerspectiveCamera::setUp(const Vec3f& up) noexcept {
-    up_ = up;
-    view_matrix_dirty_ = true;
+    setUpImpl(up);
+}
+
+Quatf PerspectiveCamera::getOrientation() const noexcept {
+    return orientation_;
+}
+
+void PerspectiveCamera::setOrientationView(const Vec3f& position, const Quatf& orientation) noexcept {
+    setOrientationViewImpl(position, orientation);
+    updateMatrices();
+}
+
+Vec3f PerspectiveCamera::getForwardDir() const noexcept {
+    return forwardDirImpl();
+}
+
+Vec3f PerspectiveCamera::getRightDir() const noexcept {
+    return rightDirImpl();
+}
+
+Vec3f PerspectiveCamera::getUpDir() const noexcept {
+    return upDirImpl();
 }
 
 Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
@@ -92,8 +111,7 @@ Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
 }
 
 void PerspectiveCamera::updateViewMatrixImpl() noexcept {
-    const Mat4f look_at = Mat4f::lookAt(position_, target_, up_, graphics_api_);
-    view_matrix_ = composeViewWithSceneScale(look_at, scene_scale_);
+    view_matrix_ = viewFromQuaternion(graphics_api_, scene_scale_);
     view_matrix_dirty_ = false;
 }
 
@@ -218,62 +236,41 @@ Mat4f PerspectiveCamera::getClipToScreenMatrix(float width, float height) const 
 }
 
 Vec3f PerspectiveCamera::getForward() const noexcept {
-    Vec3f forward = target_ - position_;
-    return forward.normalized();
+    return forwardDirImpl();
 }
 
 Vec3f PerspectiveCamera::getRight() const noexcept {
-    Vec3f forward = getForward();
-    return forward.cross(up_).normalized();
+    return rightDirImpl();
 }
 
 void PerspectiveCamera::moveForward(float distance) noexcept {
-    Vec3f forward = getForward();
-    position_ = position_ + forward * distance;
-    target_ = target_ + forward * distance;
+    position_ = position_ + forwardDirImpl() * distance;
     view_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::moveRight(float distance) noexcept {
-    Vec3f right = getRight();
-    position_ = position_ + right * distance;
-    target_ = target_ + right * distance;
+    position_ = position_ + rightDirImpl() * distance;
     view_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::moveUp(float distance) noexcept {
-    position_ = position_ + up_ * distance;
-    target_ = target_ + up_ * distance;
+    position_ = position_ + upDirImpl() * distance;
     view_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept {
-    const float yaw_rad = degToRad(yaw_angle);
-    const float pitch_rad = degToRad(pitch_angle);
-    Vec3f direction = position_ - target_;
-    const float dist = direction.length();
-    if (dist < kEpsilon) {
-        return;
-    }
-    direction /= dist;
-
-    // Yaw around current up, then pitch around horizontal right *after* yaw (orbit convention).
-    const Quatf yaw_q = Quatf::fromAxisAngle(up_, yaw_rad);
-    direction = yaw_q.rotate(direction);
-
-    Vec3f right = direction.cross(up_);
-    float right_len = right.length();
-    if (right_len < kEpsilon) {
-        right = Vec3f(1.0f, 0.0f, 0.0f);
-    } else {
-        right /= right_len;
-    }
-
-    const Quatf pitch_q = Quatf::fromAxisAngle(right, pitch_rad);
-    direction = pitch_q.rotate(direction);
-    // Pitch rotates direction and up in the plane perpendicular to right; keeps up orthogonal to direction.
-    up_ = pitch_q.rotate(up_).normalized();
-    position_ = target_ + direction * dist;
+    const Vec3f coi = targetImpl();
+    Vec3f back = orientation_.getZAxis();
+    const Quatf yaw = Quatf::fromAxisAngle(up_hint_, degToRad(yaw_angle));
+    back = yaw.rotate(back);
+    Vec3f right = back.cross(up_hint_);
+    float rl = right.length();
+    right = (rl < kEpsilon) ? Vec3f(1.0f, 0.0f, 0.0f) : right / rl;
+    const Quatf pitch = Quatf::fromAxisAngle(right, degToRad(pitch_angle));
+    back = pitch.rotate(back).normalized();
+    up_hint_ = pitch.rotate(up_hint_).normalized();
+    position_ = coi + back * look_distance_;
+    orientation_ = orientationFromPosBack(back, up_hint_, Vec3f(0.0f, 1.0f, 0.0f));
     view_matrix_dirty_ = true;
 }
 
@@ -289,7 +286,10 @@ CameraGpu PerspectiveCamera::toGpu() const noexcept {
                                               getNearPlane(),
                                               getFarPlane(),
                                               getWidth(),
-                                              getHeight());
+                                              getHeight(),
+                                              getForwardDir(),
+                                              getRightDir(),
+                                              getUpDir());
 }
 
 }  // namespace vne::scene

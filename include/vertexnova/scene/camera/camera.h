@@ -28,9 +28,8 @@ namespace vne::scene {
  * @class ICamera
  * @brief Base camera interface for all camera types.
  *
- * Defines view and projection matrix handling, position/target/up,
- * and active/name state. Implementations (e.g. PerspectiveCamera,
- * OrthographicCamera) provide concrete projection and update logic.
+ * Defines view and projection matrix handling, pose (quaternion-native with
+ * derived target / stored up hint), and active/name state.
  */
 class VNE_SCENE_API ICamera {
    public:
@@ -38,16 +37,28 @@ class VNE_SCENE_API ICamera {
 
     /** @brief Get camera position in world space. */
     [[nodiscard]] virtual vne::math::Vec3f getPosition() const noexcept = 0;
-    /** @brief Set camera position. */
+    /** @brief Set camera position (orientation unchanged; derived target moves with the eye). */
     virtual void setPosition(const vne::math::Vec3f& position) noexcept = 0;
-    /** @brief Get look-at target point. */
+    /** @brief Get look-at target point (derived from orientation and look distance). */
     [[nodiscard]] virtual vne::math::Vec3f getTarget() const noexcept = 0;
-    /** @brief Set look-at target. */
+    /** @brief Set look-at target (recomputes orientation and look distance). */
     virtual void setTarget(const vne::math::Vec3f& target) noexcept = 0;
-    /** @brief Get up vector. */
+    /** @brief Get stored up hint (look-at up vector; not necessarily equal to camera basis up). */
     [[nodiscard]] virtual vne::math::Vec3f getUp() const noexcept = 0;
-    /** @brief Set up vector. */
+    /** @brief Set up hint and re-derive orientation for the current view direction. */
     virtual void setUp(const vne::math::Vec3f& up) noexcept = 0;
+
+    /** @brief Camera-to-world rotation; getZAxis() is back (+Z camera), getYAxis() orthonormal up. */
+    [[nodiscard]] virtual vne::math::Quatf getOrientation() const noexcept = 0;
+    /** @brief Set eye position and camera-to-world orientation (normalised internally). */
+    virtual void setOrientationView(const vne::math::Vec3f& position,
+                                    const vne::math::Quatf& orientation) noexcept = 0;
+    /** @brief Unit forward (eye toward scene) = -orientation.getZAxis(). */
+    [[nodiscard]] virtual vne::math::Vec3f getForwardDir() const noexcept = 0;
+    /** @brief Unit right = orientation.getXAxis() (ICamera name; not OrthographicCamera::getRight()). */
+    [[nodiscard]] virtual vne::math::Vec3f getRightDir() const noexcept = 0;
+    /** @brief Orthonormal camera up = orientation.getYAxis(). */
+    [[nodiscard]] virtual vne::math::Vec3f getUpDir() const noexcept = 0;
 
     /** @brief Get current view matrix (cached, updated by updateViewMatrix). */
     [[nodiscard]] virtual vne::math::Mat4f getViewMatrix() const noexcept = 0;

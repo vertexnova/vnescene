@@ -11,7 +11,7 @@
 
 /**
  * @file camera_base_test.cpp
- * @brief Tests for CameraBase shared state and lookAtImpl helpers.
+ * @brief Tests for CameraBase quaternion pose and lookAtImpl helpers.
  *
  * Uses a test harness that publicly inherits CameraBase to expose
  * protected members for verification.
@@ -28,15 +28,13 @@ namespace {
 
 constexpr float kTol = 1e-5f;
 
-/**
- * Test-only harness that publicly inherits CameraBase to expose protected
- * state and lookAtImpl for testing.
- */
 class TestCameraBaseHarness : public CameraBase {
    public:
     const Vec3f& getPosition() const { return position_; }
-    const Vec3f& getTarget() const { return target_; }
-    const Vec3f& getUp() const { return up_; }
+    Vec3f getTarget() const { return targetImpl(); }
+    const Vec3f& getUp() const { return up_hint_; }
+    const Quatf& getOrientation() const { return orientation_; }
+    float getLookDistance() const { return look_distance_; }
     const std::string& getName() const { return name_; }
     bool getActive() const { return active_; }
     GraphicsApi getGraphicsApi() const { return graphics_api_; }
@@ -138,10 +136,8 @@ TEST(CameraBaseTest, LookAtImpl_ThreeArg_MarksViewMatrixDirty) {
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_KeepsPositionUnchanged) {
     TestCameraBaseHarness h;
-    // Establish a known position via the three-argument overload.
     Vec3f initialPos(5.0f, 5.0f, 5.0f);
     h.callLookAtImpl(initialPos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-    // Call the two-argument overload; position must remain unchanged.
     h.callLookAtImpl(Vec3f(1.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
     EXPECT_NEAR(h.getPosition().x(), initialPos.x(), kTol);
     EXPECT_NEAR(h.getPosition().y(), initialPos.y(), kTol);
@@ -150,10 +146,8 @@ TEST(CameraBaseTest, LookAtImpl_TwoArg_KeepsPositionUnchanged) {
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_UpdatesTargetAndUp) {
     TestCameraBaseHarness h;
-    // Establish initial pose via the three-argument overload.
     Vec3f pos(1.0f, 0.0f, 0.0f);
     h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-    // Call the two-argument overload; target and up must change, position must not.
     Vec3f newTarget(2.0f, 0.0f, 0.0f);
     Vec3f newUp(0.0f, 0.0f, 1.0f);
     h.callLookAtImpl(newTarget, newUp);
