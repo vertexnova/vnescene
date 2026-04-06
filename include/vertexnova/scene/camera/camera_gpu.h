@@ -59,8 +59,9 @@ struct VNE_SCENE_API alignas(16) CameraGpu {
 
 static_assert(alignof(CameraGpu) == 16, "CameraGpu must be 16-byte aligned for GPU buffer layout");
 static_assert(sizeof(CameraGpu) % 16 == 0, "CameraGpu size must be multiple of 16 for GPU buffer layout");
-static_assert(sizeof(CameraGpu) == 272,
-              "CameraGpu ABI size mismatch (expected 17 std140 vec4 slots): update shader/GPU layout when changing fields");
+static_assert(
+    sizeof(CameraGpu) == 272,
+    "CameraGpu ABI size mismatch (expected 17 std140 vec4 slots): update shader/GPU layout when changing fields");
 
 /**
  * @brief Build CameraGpu from precomputed matrices and parameters (shared by all camera types).

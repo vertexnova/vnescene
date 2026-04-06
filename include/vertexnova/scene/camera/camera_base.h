@@ -53,7 +53,8 @@ class VNE_SCENE_API CameraBase {
     // Pose — lookAtImpl defined in camera_base.cpp
     //--------------------------------------------------------------------------
 
-    /** @brief Unit back vector and look distance from eye→target, with degeneracy fallback to @a orientation_fallback. */
+    /** @brief Unit back vector and look distance from eye→target, with degeneracy fallback to @a orientation_fallback.
+     */
     [[nodiscard]] static std::pair<vne::math::Vec3f, float> resolveBackUnitAndLookDistance(
         const vne::math::Vec3f& eye,
         const vne::math::Vec3f& target,
