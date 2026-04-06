@@ -14,13 +14,11 @@
  * @file camera_transform_adapter.h
  * @brief Transform attachment policy: sync camera pose with vnemath TransformNode.
  *
- * Policy (Option 2): Camera keeps position/target/up; TransformNode is the
+ * Camera keeps position/target/up; TransformNode is the
  * source of truth for hierarchy. Use these adapters to sync:
  * - syncCameraFromTransformNode: copy node world transform -> camera pose.
  * - syncTransformNodeFromCamera: copy camera pose -> node local transform.
  *
- * Long-term (Option 1): camera could reference a TransformNode and hold only
- * projection params; view direction would come from transform orientation.
  */
 
 #include "vertexnova/scene/camera/camera.h"
@@ -40,9 +38,9 @@ inline void syncCameraFromTransformNode(ICamera& camera, const vne::math::Transf
     vne::math::Vec3f position = vne::math::extractTranslation(world);
     // Camera-to-world col2 is the camera's +Z axis (back direction in right-handed OpenGL).
     // Forward (toward scene) is -Z, so negate col2.
-    vne::math::Vec3f col2(world.getColumn(2).x(), world.getColumn(2).y(), world.getColumn(2).z());
+    vne::math::Vec3f col2(world.getColumn(2));
     vne::math::Vec3f forward = -col2.normalized();
-    vne::math::Vec3f col1(world.getColumn(1).x(), world.getColumn(1).y(), world.getColumn(1).z());
+    vne::math::Vec3f col1(world.getColumn(1));
     vne::math::Vec3f up = col1.normalized();
 
     camera.setPosition(position);
