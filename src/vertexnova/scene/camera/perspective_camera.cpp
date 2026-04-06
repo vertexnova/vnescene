@@ -260,6 +260,8 @@ void PerspectiveCamera::moveUp(float distance) noexcept {
     view_matrix_dirty_ = true;
 }
 
+// Trackball orbit: up_hint_ evolves with the pitch axis so orientationFromPosBack matches the rotated frame
+// (same up_hint_ role as lookAtImpl / setOrientationViewImpl; TrackballStrategy::syncFromCamera reads this state).
 void PerspectiveCamera::rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept {
     const Vec3f coi = targetImpl();
     Vec3f back = orientation_.getZAxis();

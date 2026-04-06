@@ -197,11 +197,8 @@ TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
     Quatf q = Quatf::fromAxisAngle(Vec3f(1.0f, 0.0f, 0.0f), 0.3f);
     q = q.normalized();
     cam.setOrientationView(Vec3f(0.0f, 5.0f, 10.0f), q);
-    Quatf got = cam.getOrientation().normalized();
-    EXPECT_NEAR(got.x, q.x, kTol);
-    EXPECT_NEAR(got.y, q.y, kTol);
-    EXPECT_NEAR(got.z, q.z, kTol);
-    EXPECT_NEAR(got.w, q.w, kTol);
+    const Quatf got = cam.getOrientation().normalized();
+    EXPECT_NEAR(std::fabs(got.dot(q)), 1.0f, kTol);
 }
 
 //==============================================================================

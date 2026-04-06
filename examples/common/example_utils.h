@@ -19,6 +19,7 @@
 #include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/core.h>
 
+#include <algorithm>
 #include <cmath>
 #include <string>
 

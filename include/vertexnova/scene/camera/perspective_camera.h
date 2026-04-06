@@ -68,7 +68,11 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     [[nodiscard]] vne::math::Vec3f getTarget() const noexcept override;
     /** @brief Set look-at target (recomputes orientation and look distance). */
     void setTarget(const vne::math::Vec3f& target) noexcept override;
-    /** @brief Get stored up hint (not necessarily equal to camera basis up). */
+    /**
+     * @brief Stored up hint used to reconstruct orientation with @c orientationFromPosBack (same path as
+     * @c lookAtImpl / @c setOrientationViewImpl). It is intentionally mutable during orbit: @c rotateAroundTarget
+     * updates it like a trackball so @c getUp reflects the evolved frame (see @c TrackballStrategy::syncFromCamera).
+     */
     [[nodiscard]] vne::math::Vec3f getUp() const noexcept override;
     /** @brief Set up hint and re-derive orientation for the current view direction. */
     void setUp(const vne::math::Vec3f& up) noexcept override;
@@ -161,7 +165,12 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     void moveRight(float distance) noexcept;
     /** @brief Move camera along up by distance. */
     void moveUp(float distance) noexcept;
-    /** @brief Orbit around current target by yaw and pitch angles (degrees). */
+    /**
+     * @brief Orbit around current target by yaw and pitch (degrees); trackball-style update of @c up_hint_.
+     *
+     * Mutates @c up_hint_ so the reconstructed orientation via @c orientationFromPosBack stays consistent
+     * with @c lookAtImpl / @c setOrientationViewImpl; @c getUp() reflects the evolved hint.
+     */
     void rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept;
 
    private:

@@ -13,13 +13,17 @@ Smoke-test linkage and the quaternion-native camera API. A non-zero exit means o
 
 ## Build and run
 
-From the vnescene root (with examples enabled):
+From the vnescene repository root. The executable is **`${CMAKE_BINARY_DIR}/bin/examples/example_01_basic`** (CMake `RUNTIME_OUTPUT_DIRECTORY` in [examples/CMakeLists.txt](../CMakeLists.txt); overview in [examples/README.md](../README.md)).
+
+**Recommended** (shared library build tree):
 
 ```bash
-cmake -B build -DVNE_SCENE_EXAMPLES=ON
-cmake --build build
-./build/bin/examples/example_01_basic
+cmake -B build/shared -DVNE_SCENE_EXAMPLES=ON -DVNE_SCENE_LIB_TYPE=shared
+cmake --build build/shared
+./build/shared/bin/examples/example_01_basic
 echo $?   # expect 0
 ```
 
-See [../README.md](../README.md) for shared options (`VNE_SCENE_DEV`, static vs shared).
+**Other binary directories:** with **`cmake -B build/static`** run `./build/static/bin/examples/example_01_basic`; with **`cmake -B build`** run `./build/bin/examples/example_01_basic`.
+
+See the repository [README.md](../README.md) for `VNE_SCENE_DEV` and further options.

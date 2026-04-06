@@ -36,9 +36,8 @@ int runCameraTransformSyncExample() {
     TransformNode node;
     syncTransformNodeFromCamera(node, *cam);
 
-    Vec3f node_pos(node.getModelMatrix().getColumn(3).x(),
-                   node.getModelMatrix().getColumn(3).y(),
-                   node.getModelMatrix().getColumn(3).z());
+    const Mat4f node_world = node.getModelMatrix();
+    const Vec3f node_pos(node_world.getColumn(3).x(), node_world.getColumn(3).y(), node_world.getColumn(3).z());
     VNE_LOG_INFO << "Camera -> Node: node world position = " << node_pos.x() << ", " << node_pos.y() << ", "
                  << node_pos.z();
 

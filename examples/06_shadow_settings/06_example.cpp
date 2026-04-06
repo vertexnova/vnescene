@@ -29,7 +29,7 @@ int runShadowSettingsExample() {
 
     const ShadowSettings dirRead = dir.getShadowSettings();
     VNE_LOG_INFO << "DirectionalLight shadow: enabled=" << dirRead.enabled << " resolution=" << dirRead.resolution
-                 << " bias=" << dirRead.bias;
+                 << " bias=" << dirRead.bias << " far_plane=" << dirRead.far_plane;
 
     if (!checkTrue("directional shadow enabled", dirRead.enabled)) {
         ++failures;
@@ -38,6 +38,9 @@ int runShadowSettingsExample() {
         ++failures;
     }
     if (!checkNear("directional shadow bias", dirRead.bias, 0.01f, 1e-5f)) {
+        ++failures;
+    }
+    if (!checkNear("directional shadow far_plane round-trip", dirRead.far_plane, dirSettings.far_plane, 1e-5f)) {
         ++failures;
     }
 

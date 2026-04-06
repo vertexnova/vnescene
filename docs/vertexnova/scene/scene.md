@@ -98,4 +98,4 @@ See **example 07_camera_transform_sync** for `syncCameraFromTransformNode` and `
 ## See Also
 
 - [Documentation index](../../README.md) — how to generate API documentation (Doxygen).
-- [Examples](../../../examples/README.md) — 01_basic through 07_camera_transform_sync.
+- [Examples](../../../examples/README.md) — 01_basic through 07_camera_transform_sync (runnable binaries under `${CMAKE_BINARY_DIR}/bin/examples/`; see that README for `build/shared` vs `build/static` layouts).

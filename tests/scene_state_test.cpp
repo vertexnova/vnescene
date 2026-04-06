@@ -154,6 +154,7 @@ TEST(SceneState, MoveAssign_TransfersOwnership) {
     EXPECT_EQ(dst.getLightCount(), 1u);
     EXPECT_EQ(dst.getMaxLights(), 5u);
     EXPECT_FALSE(src.hasActiveCamera());
+    EXPECT_EQ(src.getLightCount(), 0u);
 }
 
 TEST(SceneState, AddLight_NullIgnored) {

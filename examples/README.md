@@ -24,7 +24,7 @@ cmake --build build/static
 
 Alternatively, `-DVNE_SCENE_DEV=ON` enables both tests and examples.
 
-Executables are placed in `build/<config>/bin/examples/`.
+Executables are placed in **`${CMAKE_BINARY_DIR}/bin/examples/`** (set in [CMakeLists.txt](CMakeLists.txt) via `RUNTIME_OUTPUT_DIRECTORY`). That is your CMake binary directory (the path passed to **`cmake -B`**) with **`/bin/examples/`** appended—e.g. `build/shared/bin/examples/` or `build/static/bin/examples/` for the layouts above, or `build/bin/examples/` if you use `cmake -B build`.
 
 ## Index
 
@@ -38,13 +38,19 @@ Executables are placed in `build/<config>/bin/examples/`.
 | 06_shadow_settings | Shadow settings on lights | [06_shadow_settings/README.md](06_shadow_settings/README.md) |
 | 07_camera_transform_sync | Camera ↔ TransformNode | [07_camera_transform_sync/README.md](07_camera_transform_sync/README.md) |
 
-**Run (replace `shared` with your build dir):**
+**Run** (after the same configure/build as above; binaries live under **`${CMAKE_BINARY_DIR}/bin/examples/`**):
 
 ```bash
 ./build/shared/bin/examples/example_01_basic
 ./build/shared/bin/examples/example_02_scene_gpu_pack
-# … etc.
+./build/shared/bin/examples/example_03_camera_backend
+./build/shared/bin/examples/example_04_fit_to_aabb
+./build/shared/bin/examples/example_05_screen_ray
+./build/shared/bin/examples/example_06_shadow_settings
+./build/shared/bin/examples/example_07_camera_transform_sync
 ```
+
+With **`cmake -B build/static`** or **`cmake -B build`**, replace the `./build/shared` prefix with `./build/static` or `./build` respectively. Each example’s README in this directory uses the same **Build and run** layout for its executable name.
 
 ## CMake layout
 

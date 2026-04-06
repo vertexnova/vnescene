@@ -32,6 +32,8 @@ Configure passes `-DVNE_SCENE_TESTS=ON -DVNE_SCENE_EXAMPLES=ON`, so `-a test` ru
 
 ### Windows
 
+Configure enables **`-DVNE_SCENE_TESTS=ON`** so tests run with the Windows scripts. **`VNE_SCENE_EXAMPLES` is not turned on** on Windows (examples stay off by default), unlike Linux/macOS scripts that also pass `-DVNE_SCENE_EXAMPLES=ON`.
+
 **Bash** (Git Bash / WSL): `build_windows.sh`
 
 ```bash

@@ -46,13 +46,14 @@ int runFitToAabbExample() {
         Vec3f screen = project(*cam, corner, vw, vh, GraphicsApi::eOpenGL);
         VNE_LOG_INFO << "AABB corner " << i << " screen: " << screen.x() << ", " << screen.y() << ", depth "
                      << screen.z();
-        if (std::isfinite(screen.x()) && std::isfinite(screen.y()) && std::isfinite(screen.z()) && screen.z() >= 0.0f
-            && screen.z() <= 1.0f) {
+        // project() returns x,y in pixels and depth in [0,1] (OpenGL); require corners inside the pixel viewport.
+        if (std::isfinite(screen.x()) && std::isfinite(screen.y()) && std::isfinite(screen.z()) && screen.x() >= 0.0f
+            && screen.x() <= vw && screen.y() >= 0.0f && screen.y() <= vh && screen.z() >= 0.0f && screen.z() <= 1.0f) {
             ++in_frustum;
         }
     }
 
-    if (!checkTrue("all 8 AABB corners project to finite depth in [0,1] (OpenGL)", in_frustum == 8)) {
+    if (!checkTrue("all 8 AABB corners project inside viewport pixels and depth in [0,1] (OpenGL)", in_frustum == 8)) {
         ++failures;
     }
 
