@@ -83,7 +83,13 @@ class VNE_SCENE_API CameraBase {
     [[nodiscard]] vne::math::Vec3f targetImpl() const noexcept { return position_ + forwardDirImpl() * look_distance_; }
 
     /**
-     * @brief Apply scene zoom in the image plane after lookAt.
+     * @brief Apply scene zoom in the image plane after the view matrix is built.
+     *
+     * Uses scale(s, s, 1) so view-space depth is not scaled; projection near/far stay consistent
+     * with geometry (uniform scale(s,s,s) on the view would break clip-space depth).
+     *
+     * @param look_at_view View matrix from quaternion (or legacy look-at); no scene scale yet.
+     * @param scene_scale XY scale factor; 1.0 returns @a look_at_view unchanged.
      */
     [[nodiscard]] static vne::math::Mat4f composeViewWithSceneScale(const vne::math::Mat4f& look_at_view,
                                                                     float scene_scale) noexcept {

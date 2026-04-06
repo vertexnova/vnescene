@@ -61,7 +61,7 @@ class VNE_SCENE_API ICamera {
 
     /** @brief Get current view matrix (cached, updated by updateViewMatrix). */
     [[nodiscard]] virtual vne::math::Mat4f getViewMatrix() const noexcept = 0;
-    /** @brief Recompute view matrix from position/target/up. */
+    /** @brief Recompute view matrix from quaternion pose, position, and scene scale. */
     virtual void updateViewMatrix() noexcept = 0;
     /** @brief Get current projection matrix (cached, updated by updateProjectionMatrix). */
     [[nodiscard]] virtual vne::math::Mat4f getProjectionMatrix() const noexcept = 0;
@@ -137,7 +137,7 @@ class VNE_SCENE_API ICamera {
     /** @brief Set graphics API; view and projection are rebuilt for the chosen backend. */
     virtual void setGraphicsApi(vne::math::GraphicsApi api) noexcept = 0;
 
-    /** @brief Pack camera data for GPU (view, proj, viewProj, position, near/far, viewport). */
+    /** @brief Pack camera data for GPU (view, proj, viewProj, position, near/far, viewport, basis dirs). */
     [[nodiscard]] virtual CameraGpu toGpu() const noexcept = 0;
 
     /** @brief Get camera name. */
