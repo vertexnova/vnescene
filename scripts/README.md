@@ -15,6 +15,8 @@ Build scripts for macOS, Linux, and Windows.
 
 **Options:** `-t` build type, `-c` compiler (gcc|clang), `-a` action (configure|build|configure_and_build|test), `-j` jobs, `-clean`, `-interactive`, `-h`
 
+Configure passes `-DVNE_SCENE_TESTS=ON -DVNE_SCENE_EXAMPLES=ON` so `-a test` runs **ctest** (unit + examples).
+
 ### macOS (`build_macos.sh`)
 
 ```bash
@@ -25,6 +27,8 @@ Build scripts for macOS, Linux, and Windows.
 ```
 
 **Options:** `-t` build type, `-a` action, `-xcode` (also generate Xcode project), `-xcode-only`, `-j` jobs, `-clean`, `-interactive`, `-h`
+
+Configure passes `-DVNE_SCENE_TESTS=ON -DVNE_SCENE_EXAMPLES=ON`, so `-a test` runs **ctest** over unit tests and example smoke tests.
 
 ### Windows
 

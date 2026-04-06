@@ -177,3 +177,26 @@ TEST(CameraUtils, FitToAABB_MonotonicDistance) {
 
     EXPECT_GT(dist2, dist1);
 }
+
+TEST(CameraUtils, FitToAABB_ExtendsFarPlaneWhenNeeded) {
+    // Use a tight far plane (5.0f) with a large AABB; fitToAabb must extend far to cover it.
+    PerspectiveCameraParameters params(60.0f, 1.0f, 0.1f, 5.0f);
+    auto cam = CameraFactory::createPerspective(params);
+    cam->setPosition(Vec3f(0.0f, 0.0f, 20.0f));
+    cam->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam->resize(800.0f, 600.0f);
+    cam->updateMatrices();
+
+    Aabb aabb = Aabb::fromCenterAndHalfExtents(Vec3f(0, 0, 0), Vec3f(10.0f, 10.0f, 10.0f));
+    float far_before = cam->getFarPlane();
+    fitToAabb(*cam, aabb, 1.1f);
+
+    // The required view distance should exceed far_before; far plane must have grown.
+    EXPECT_GT(cam->getFarPlane(), far_before) << "fitToAabb must extend far plane when computed distance exceeds it";
+    // AABB back face must still be within the frustum.
+    Frustum f = buildFrustum(*cam);
+    for (uint32_t i = 0; i < 8u; ++i) {
+        EXPECT_TRUE(f.intersects(Aabb::fromCenterAndHalfExtents(aabb.corner(i), Vec3f(0.01f, 0.01f, 0.01f))))
+            << "Corner " << i << " should be inside frustum after fitToAabb extends far plane";
+    }
+}

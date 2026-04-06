@@ -322,16 +322,14 @@ endif()
 add_subdirectory(src)
 
 #==============================================================================
-# Tests
+# Tests and examples (CTest needs enable_testing before add_test in either tree)
 #==============================================================================
-if(VNE_SCENE_TESTS)
+if(VNE_SCENE_TESTS OR VNE_SCENE_EXAMPLES)
     enable_testing()
+endif()
+if(VNE_SCENE_TESTS)
     add_subdirectory(tests)
 endif()
-
-#==============================================================================
-# Examples
-#==============================================================================
 if(VNE_SCENE_EXAMPLES)
     add_subdirectory(examples)
 endif()

@@ -4,6 +4,8 @@ This directory contains headless examples that exercise the VneScene API. Each n
 
 **Exit codes:** `0` means all built-in self-checks passed. A **non-zero** exit means at least one check failed (look for `[FAIL]` in the log). This supports CI or scripted smoke runs without linking GoogleTest into examples.
 
+**CTest:** When `VNE_SCENE_EXAMPLES=ON`, each example is registered as a test (same name as the executable, e.g. `example_01_basic`). Run `ctest --output-on-failure` from the build tree to execute them together with `vnescene_tests` (if `VNE_SCENE_TESTS=ON`). Filter examples only: `ctest -L examples`.
+
 Shared helpers live under [`common/`](common/): [`logging_guard.h`](common/logging_guard.h) and [`example_utils.h`](common/example_utils.h) (section banners, `checkNear` / `checkVec3Near` / `checkLengthNear` / `checkTrue`).
 
 ## Building Examples

@@ -49,6 +49,12 @@ void fitToAabb(PerspectiveCamera& cam, const Aabb& aabb, float padding) noexcept
     Vec3f new_position = center + direction * distance;
     cam.setTarget(center);
     cam.setPosition(new_position);
+
+    // Ensure the far plane covers the back of the bounding sphere.
+    float required_far = distance + radius;
+    if (required_far > cam.getFarPlane()) {
+        cam.setFarPlane(required_far);
+    }
 }
 
 }  // namespace vne::scene

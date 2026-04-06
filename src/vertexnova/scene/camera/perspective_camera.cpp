@@ -47,7 +47,7 @@ PerspectiveCamera::PerspectiveCamera(
     float fov, float width, float height, float near_plane, float far_plane, std::string name)
     : CameraBase(std::move(name))
     , fov_(fov)
-    , aspect_ratio_(width / height)
+    , aspect_ratio_(height > 0.0f ? width / height : 1.0f)
     , near_plane_(near_plane)
     , far_plane_(far_plane)
     , width_(width)
@@ -213,7 +213,9 @@ void PerspectiveCamera::setPerspective(float fov, float aspect_ratio, float near
 void PerspectiveCamera::resize(float width, float height) noexcept {
     width_ = width;
     height_ = height;
-    aspect_ratio_ = width / height;
+    if (height > 0.0f) {
+        aspect_ratio_ = width / height;
+    }
     projection_matrix_dirty_ = true;
 }
 

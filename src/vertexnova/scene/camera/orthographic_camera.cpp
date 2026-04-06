@@ -216,8 +216,8 @@ void OrthographicCamera::setBounds(
     right_ = right;
     bottom_ = bottom;
     top_ = top;
-    near_plane_ = near_plane;
-    far_plane_ = far_plane;
+    near_plane_ = std::max(kMinNearPlane, near_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 

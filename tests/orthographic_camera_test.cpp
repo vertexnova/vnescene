@@ -203,3 +203,37 @@ TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
     EXPECT_NEAR(got.z, q.z, kTol);
     EXPECT_NEAR(got.w, q.w, kTol);
 }
+
+//==============================================================================
+// setBounds edge cases
+//==============================================================================
+
+TEST(OrthographicCameraTest, SetBounds_ClampsNearAndFarLikeSetters) {
+    OrthographicCamera cam = makeOrtho();
+    // near < kMinNearPlane and far < near + kMinFarPlaneOffset
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 0.0f);
+    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+}
+
+TEST(OrthographicCameraTest, SetBounds_NearEqualsFar_FarIsAdjusted) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 1.0f);
+    EXPECT_GT(cam.getFarPlane(), cam.getNearPlane());
+}
+
+//==============================================================================
+// setSceneScale clamping
+//==============================================================================
+
+TEST(OrthographicCameraTest, SetSceneScale_ZeroIsClamped) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setSceneScale(0.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}
+
+TEST(OrthographicCameraTest, SetSceneScale_NegativeIsClamped) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setSceneScale(-2.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}

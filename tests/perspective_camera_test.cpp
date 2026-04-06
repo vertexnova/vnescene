@@ -260,3 +260,33 @@ TEST(PerspectiveCameraTest, SetOrientationView_RoundTripOrientation) {
     EXPECT_NEAR(got.w, q.w, kTol);
     EXPECT_NEAR(cam.getPosition().x(), 1.0f, kTol);
 }
+
+//==============================================================================
+// resize edge cases
+//==============================================================================
+
+TEST(PerspectiveCameraTest, Resize_ZeroHeight_DoesNotProduceNaN) {
+    PerspectiveCamera cam = makePerspective();
+    float aspect_before = cam.getAspectRatio();
+    cam.resize(800.0f, 0.0f);
+    float aspect_after = cam.getAspectRatio();
+    EXPECT_EQ(aspect_before, aspect_after) << "aspect ratio must not change when height == 0";
+    EXPECT_FALSE(std::isnan(aspect_after));
+    EXPECT_FALSE(std::isinf(aspect_after));
+}
+
+//==============================================================================
+// setSceneScale clamping
+//==============================================================================
+
+TEST(PerspectiveCameraTest, SetSceneScale_ZeroIsClamped) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setSceneScale(0.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}
+
+TEST(PerspectiveCameraTest, SetSceneScale_NegativeIsClamped) {
+    PerspectiveCamera cam = makePerspective();
+    cam.setSceneScale(-5.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}

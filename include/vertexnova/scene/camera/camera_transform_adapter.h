@@ -38,8 +38,10 @@ namespace vne::scene {
 inline void syncCameraFromTransformNode(ICamera& camera, const vne::math::TransformNode& node) noexcept {
     vne::math::Mat4f world = node.getModelMatrix();
     vne::math::Vec3f position = vne::math::extractTranslation(world);
+    // Camera-to-world col2 is the camera's +Z axis (back direction in right-handed OpenGL).
+    // Forward (toward scene) is -Z, so negate col2.
     vne::math::Vec3f col2(world.getColumn(2).x(), world.getColumn(2).y(), world.getColumn(2).z());
-    vne::math::Vec3f forward = col2.normalized();
+    vne::math::Vec3f forward = -col2.normalized();
     vne::math::Vec3f col1(world.getColumn(1).x(), world.getColumn(1).y(), world.getColumn(1).z());
     vne::math::Vec3f up = col1.normalized();
 

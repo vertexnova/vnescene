@@ -17,6 +17,8 @@ macro(vne_add_example target_name)
     set_target_properties(${target_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/examples"
     )
+    add_test(NAME ${target_name} COMMAND "$<TARGET_FILE:${target_name}>")
+    set_tests_properties(${target_name} PROPERTIES LABELS "vnescene;examples")
 endmacro()
 
 # 01 - Basic: minimal scene (camera + lights) with logging guard
