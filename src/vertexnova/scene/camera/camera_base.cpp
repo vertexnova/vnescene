@@ -59,11 +59,11 @@ Quatf CameraBase::orientationFromPosBack(Vec3f back, Vec3f up_hint, const Vec3f&
         right /= rl;
     }
     const Vec3f up = back.cross(right);
-    const Mat4f R(Vec4f(right.x(), right.y(), right.z(), 0.0f),
-                  Vec4f(up.x(), up.y(), up.z(), 0.0f),
-                  Vec4f(back.x(), back.y(), back.z(), 0.0f),
-                  Vec4f(0.0f, 0.0f, 0.0f, 1.0f));
-    return Quatf(R).normalized();
+    const Mat4f basis_mat(Vec4f(right.x(), right.y(), right.z(), 0.0f),
+                          Vec4f(up.x(), up.y(), up.z(), 0.0f),
+                          Vec4f(back.x(), back.y(), back.z(), 0.0f),
+                          Vec4f(0.0f, 0.0f, 0.0f, 1.0f));
+    return Quatf(basis_mat).normalized();
 }
 
 Mat4f CameraBase::viewFromQuaternion(GraphicsApi api, float s) const noexcept {
