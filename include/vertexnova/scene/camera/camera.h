@@ -51,8 +51,7 @@ class VNE_SCENE_API ICamera {
     /** @brief Camera-to-world rotation; getZAxis() is back (+Z camera), getYAxis() orthonormal up. */
     [[nodiscard]] virtual vne::math::Quatf getOrientation() const noexcept = 0;
     /** @brief Set eye position and camera-to-world orientation (normalised internally). */
-    virtual void setOrientationView(const vne::math::Vec3f& position,
-                                    const vne::math::Quatf& orientation) noexcept = 0;
+    virtual void setOrientationView(const vne::math::Vec3f& position, const vne::math::Quatf& orientation) noexcept = 0;
     /** @brief Unit forward (eye toward scene) = -orientation.getZAxis(). */
     [[nodiscard]] virtual vne::math::Vec3f getForwardDir() const noexcept = 0;
     /** @brief Unit right = orientation.getXAxis() (ICamera name; not OrthographicCamera::getRight()). */

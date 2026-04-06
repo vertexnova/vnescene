@@ -88,8 +88,14 @@ CameraGpu makeCameraGpuFromMatricesAndParams(const vne::math::Mat4f& view,
                                              const vne::math::Vec3f& forward_dir,
                                              const vne::math::Vec3f& right_dir,
                                              const vne::math::Vec3f& up_dir) noexcept {
-    CameraGpu out = makeCameraGpuFromMatricesAndParams(
-        view, proj, view_proj, position, near_plane, far_plane, viewport_width, viewport_height);
+    CameraGpu out = makeCameraGpuFromMatricesAndParams(view,
+                                                       proj,
+                                                       view_proj,
+                                                       position,
+                                                       near_plane,
+                                                       far_plane,
+                                                       viewport_width,
+                                                       viewport_height);
     out.forward_dir.x = forward_dir.x();
     out.forward_dir.y = forward_dir.y();
     out.forward_dir.z = forward_dir.z();

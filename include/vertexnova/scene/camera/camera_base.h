@@ -70,8 +70,7 @@ class VNE_SCENE_API CameraBase {
         vne::math::Vec3f up_hint,
         const vne::math::Vec3f& fallback_up = vne::math::Vec3f(0.0f, 1.0f, 0.0f)) noexcept;
 
-    [[nodiscard]] vne::math::Mat4f viewFromQuaternion(vne::math::GraphicsApi api,
-                                                       float scene_scale) const noexcept;
+    [[nodiscard]] vne::math::Mat4f viewFromQuaternion(vne::math::GraphicsApi api, float scene_scale) const noexcept;
 
     void setTargetImpl(const vne::math::Vec3f& target) noexcept;
     void setUpImpl(const vne::math::Vec3f& up) noexcept;
@@ -81,9 +80,7 @@ class VNE_SCENE_API CameraBase {
     [[nodiscard]] vne::math::Vec3f forwardDirImpl() const noexcept { return -orientation_.getZAxis(); }
     [[nodiscard]] vne::math::Vec3f rightDirImpl() const noexcept { return orientation_.getXAxis(); }
     [[nodiscard]] vne::math::Vec3f upDirImpl() const noexcept { return orientation_.getYAxis(); }
-    [[nodiscard]] vne::math::Vec3f targetImpl() const noexcept {
-        return position_ + forwardDirImpl() * look_distance_;
-    }
+    [[nodiscard]] vne::math::Vec3f targetImpl() const noexcept { return position_ + forwardDirImpl() * look_distance_; }
 
     /**
      * @brief Apply scene zoom in the image plane after lookAt.
@@ -100,13 +97,13 @@ class VNE_SCENE_API CameraBase {
     // Shared member state
     //--------------------------------------------------------------------------
 
-    vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};              //!< Eye position in world space.
-    vne::math::Quatf orientation_{vne::math::Quatf::identity()}; //!< Camera-to-world rotation.
-    float look_distance_ = 1.0f;                                 //!< Eye-to-derived-target distance.
-    vne::math::Vec3f up_hint_{0.0f, 1.0f, 0.0f};                //!< Stored hint; @c getUp() returns this.
+    vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};                 //!< Eye position in world space.
+    vne::math::Quatf orientation_{vne::math::Quatf::identity()};  //!< Camera-to-world rotation.
+    float look_distance_ = 1.0f;                                  //!< Eye-to-derived-target distance.
+    vne::math::Vec3f up_hint_{0.0f, 1.0f, 0.0f};                  //!< Stored hint; @c getUp() returns this.
 
-    std::string name_;                             //!< Camera name.
-    bool active_ = true;                           //!< Whether this camera is active for rendering.
+    std::string name_;    //!< Camera name.
+    bool active_ = true;  //!< Whether this camera is active for rendering.
     vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};  //!< Backend for view/projection.
     float scene_scale_ = 1.0f;  //!< XY zoom factor baked into the view (see composeViewWithSceneScale).
 
