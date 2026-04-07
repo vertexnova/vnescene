@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/vertexnova/vnescene/compare/v1.3.2...v1.4.0) (2026-04-07)
+
+
+### Features
+
+* Enhanced camera system with quaternion based pose rotation. Updated camera documention, texts and examples. ([#14](https://github.com/vertexnova/vnescene/issues/14)) ([dc8591d](https://github.com/vertexnova/vnescene/commit/dc8591dc80c445d10ab55ba2bac13720e91254f1))
+
 ## [1.3.2](https://github.com/vertexnova/vnescene/compare/v1.3.1...v1.3.2) (2026-03-30)
 
 
