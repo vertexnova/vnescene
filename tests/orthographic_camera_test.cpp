@@ -180,3 +180,57 @@ TEST(OrthographicCameraTest, Projection_IndependentOfSceneScale) {
         }
     }
 }
+
+TEST(OrthographicCameraTest, GetForwardDir_MatchesNormalizedTargetMinusPosition) {
+    OrthographicCamera cam = makeOrtho();
+    cam.lookAt(Vec3f(0.0f, 0.0f, 10.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    cam.updateMatrices();
+    Vec3f a = cam.getForwardDir();
+    Vec3f b = (cam.getTarget() - cam.getPosition()).normalized();
+    EXPECT_NEAR(a.x(), b.x(), kTol);
+    EXPECT_NEAR(a.y(), b.y(), kTol);
+    EXPECT_NEAR(a.z(), b.z(), kTol);
+}
+
+TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
+    OrthographicCamera cam = makeOrtho();
+    Quatf q = Quatf::fromAxisAngle(Vec3f(1.0f, 0.0f, 0.0f), 0.3f);
+    q = q.normalized();
+    cam.setOrientationView(Vec3f(0.0f, 5.0f, 10.0f), q);
+    const Quatf got = cam.getOrientation().normalized();
+    EXPECT_NEAR(std::fabs(got.dot(q)), 1.0f, kTol);
+}
+
+//==============================================================================
+// setBounds edge cases
+//==============================================================================
+
+TEST(OrthographicCameraTest, SetBounds_ClampsNearAndFarLikeSetters) {
+    OrthographicCamera cam = makeOrtho();
+    // near < kMinNearPlane and far < near + kMinFarPlaneOffset
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 0.0f);
+    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+}
+
+TEST(OrthographicCameraTest, SetBounds_NearEqualsFar_FarIsAdjusted) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 1.0f);
+    EXPECT_GT(cam.getFarPlane(), cam.getNearPlane());
+}
+
+//==============================================================================
+// setSceneScale clamping
+//==============================================================================
+
+TEST(OrthographicCameraTest, SetSceneScale_ZeroIsClamped) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setSceneScale(0.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}
+
+TEST(OrthographicCameraTest, SetSceneScale_NegativeIsClamped) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setSceneScale(-2.0f);
+    EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}

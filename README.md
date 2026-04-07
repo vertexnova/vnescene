@@ -156,7 +156,7 @@ See [examples/01_basic](examples/01_basic) for a complete minimal example.
 | [06_shadow_settings](examples/06_shadow_settings) | Directional and spot lights, setShadowSettings |
 | [07_camera_transform_sync](examples/07_camera_transform_sync) | syncCameraFromTransformNode / syncTransformNodeFromCamera |
 
-Build with `-DVNE_SCENE_EXAMPLES=ON` or use the dev preset (`-DVNE_SCENE_DEV=ON`). Run from `build/bin/examples/`. See [examples/README.md](examples/README.md) for details.
+Build with `-DVNE_SCENE_EXAMPLES=ON` or use the dev preset (`-DVNE_SCENE_DEV=ON`). Example binaries are under **`${CMAKE_BINARY_DIR}/bin/examples/`** (i.e. the directory passed to `cmake -B`, then `bin/examples/`—e.g. `./build/shared/bin/examples/` with `-B build/shared`, `./build/static/bin/examples/` with `-B build/static`, or `./build/bin/examples/` with `-B build`). See [examples/README.md](examples/README.md) for details.
 
 ## Documentation
 

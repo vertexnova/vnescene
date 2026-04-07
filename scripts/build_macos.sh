@@ -33,6 +33,7 @@ usage() {
   echo "Usage: $0 [-t <build_type>] [-a <action>] [-l <lib_type>] [-clean] [-interactive] [-j <jobs>] [-xcode] [-xcode-only]"
   echo "  -t <build_type>  Debug|Release|RelWithDebInfo|MinSizeRel"
   echo "  -a <action>      configure|build|configure_and_build|test|xcode|xcode_build"
+  echo "                   (configure enables VNE_SCENE_TESTS=ON and VNE_SCENE_EXAMPLES=ON; ctest runs unit + example smoke tests)"
   echo "  -l <lib_type>    static|shared (default: shared). Build dir: build/<lib_type>/..."
   echo "  -clean           Clean build directory first"
   echo "  -interactive     Interactive mode"
@@ -81,22 +82,56 @@ else
   BUILD_DIR="$PROJECT_ROOT/build/${LIB_TYPE}/${BUILD_TYPE}/build-macos-$COMPILER-${COMPILER_VERSION}"
 fi
 
-[ "$GENERATE_XCODE" = true ] && CONFIGURE_CMD="cmake -G Xcode -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DVNE_SCENE_LIB_TYPE=$LIB_TYPE -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DVNE_SCENE_TESTS=ON $PROJECT_ROOT" \
-  || CONFIGURE_CMD="cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DVNE_SCENE_LIB_TYPE=$LIB_TYPE -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DVNE_SCENE_TESTS=ON $PROJECT_ROOT"
+run_configure() {
+  if [ "$GENERATE_XCODE" = true ]; then
+    cmake -G Xcode \
+      "-DCMAKE_BUILD_TYPE=$BUILD_TYPE" \
+      "-DVNE_SCENE_LIB_TYPE=$LIB_TYPE" \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+      -DVNE_SCENE_TESTS=ON \
+      -DVNE_SCENE_EXAMPLES=ON \
+      "$PROJECT_ROOT"
+  else
+    cmake \
+      "-DCMAKE_BUILD_TYPE=$BUILD_TYPE" \
+      "-DVNE_SCENE_LIB_TYPE=$LIB_TYPE" \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+      -DVNE_SCENE_TESTS=ON \
+      -DVNE_SCENE_EXAMPLES=ON \
+      "$PROJECT_ROOT"
+  fi
+}
 
-[ "$GENERATE_XCODE" = true ] && BUILD_CMD="xcodebuild -project VneScene.xcodeproj -configuration $BUILD_TYPE -parallelizeTargets -jobs $JOBS" && TEST_CMD="xcodebuild -project VneScene.xcodeproj -configuration $BUILD_TYPE -target RUN_TESTS" \
-  || BUILD_CMD="make -j$JOBS" && TEST_CMD="ctest --output-on-failure"
+run_build() {
+  if [ "$GENERATE_XCODE" = true ]; then
+    xcodebuild -project VneScene.xcodeproj -configuration "$BUILD_TYPE" -parallelizeTargets -jobs "$JOBS"
+  else
+    make -j"$JOBS"
+  fi
+}
+
+run_tests() {
+  if [ "$GENERATE_XCODE" = true ]; then
+    xcodebuild -project VneScene.xcodeproj -configuration "$BUILD_TYPE" -target RUN_TESTS
+  else
+    ctest --output-on-failure
+  fi
+}
 
 clean_build() { rm -rf "$BUILD_DIR"; mkdir -p "$BUILD_DIR"; cd "$BUILD_DIR" || exit; }
 ensure_build_dir() { [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"; cd "$BUILD_DIR" || exit; }
 
 case $ACTION in
-  configure) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD ;;
-  build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD; eval $BUILD_CMD ;;
-  configure_and_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD; eval $BUILD_CMD ;;
-  test) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD; eval $BUILD_CMD; eval $TEST_CMD ;;
-  xcode) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD; echo "Xcode project: $BUILD_DIR (VneScene.xcodeproj)" ;;
-  xcode_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval $CONFIGURE_CMD; eval $BUILD_CMD; echo "Xcode build done: $BUILD_DIR" ;;
+  configure) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure ;;
+  build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; run_build ;;
+  configure_and_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; run_build ;;
+  test) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; run_build; run_tests ;;
+  xcode) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; echo "Xcode project: $BUILD_DIR (VneScene.xcodeproj)" ;;
+  xcode_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; run_build; echo "Xcode build done: $BUILD_DIR" ;;
   *) usage ;;
 esac
 

@@ -33,7 +33,7 @@ Mat4f float4ColumnsToMat4(const Float4& c0, const Float4& c1, const Float4& c2, 
 }  // namespace
 
 TEST(CameraGpu, Layout_StaticAsserts) {
-    EXPECT_EQ(sizeof(CameraGpu), 14u * 16u);
+    EXPECT_EQ(sizeof(CameraGpu), 17u * 16u);
     EXPECT_EQ(alignof(CameraGpu), 16u);
 }
 
@@ -71,4 +71,26 @@ TEST(CameraGpu, Packing_NearFarMatchStoredClipWhenSceneScale) {
     CameraGpu gpu = cam->toGpu();
     EXPECT_NEAR(gpu.position_near.w, cam->getNearPlane(), kTolerance);
     EXPECT_NEAR(gpu.far_viewport.x, cam->getFarPlane(), kTolerance);
+}
+
+TEST(CameraGpu, Packing_DirectionVectorsMatchCamera) {
+    PerspectiveCameraParameters params(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+    auto cam = CameraFactory::createPerspective(params);
+    cam->setPosition(Vec3f(0.0f, 0.0f, 5.0f));
+    cam->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam->updateMatrices();
+
+    CameraGpu gpu = cam->toGpu();
+    Vec3f f = cam->getForwardDir();
+    Vec3f r = cam->getRightDir();
+    Vec3f u = cam->getUpDir();
+    EXPECT_NEAR(gpu.forward_dir.x, f.x(), kTolerance);
+    EXPECT_NEAR(gpu.forward_dir.y, f.y(), kTolerance);
+    EXPECT_NEAR(gpu.forward_dir.z, f.z(), kTolerance);
+    EXPECT_NEAR(gpu.right_dir.x, r.x(), kTolerance);
+    EXPECT_NEAR(gpu.right_dir.y, r.y(), kTolerance);
+    EXPECT_NEAR(gpu.right_dir.z, r.z(), kTolerance);
+    EXPECT_NEAR(gpu.up_dir.x, u.x(), kTolerance);
+    EXPECT_NEAR(gpu.up_dir.y, u.y(), kTolerance);
+    EXPECT_NEAR(gpu.up_dir.z, u.z(), kTolerance);
 }

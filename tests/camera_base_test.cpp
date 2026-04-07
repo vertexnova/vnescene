@@ -11,7 +11,7 @@
 
 /**
  * @file camera_base_test.cpp
- * @brief Tests for CameraBase shared state and lookAtImpl helpers.
+ * @brief Tests for CameraBase quaternion pose and lookAtImpl helpers.
  *
  * Uses a test harness that publicly inherits CameraBase to expose
  * protected members for verification.
@@ -28,15 +28,13 @@ namespace {
 
 constexpr float kTol = 1e-5f;
 
-/**
- * Test-only harness that publicly inherits CameraBase to expose protected
- * state and lookAtImpl for testing.
- */
 class TestCameraBaseHarness : public CameraBase {
    public:
     const Vec3f& getPosition() const { return position_; }
-    const Vec3f& getTarget() const { return target_; }
-    const Vec3f& getUp() const { return up_; }
+    Vec3f getTarget() const { return targetImpl(); }
+    const Vec3f& getUp() const { return up_hint_; }
+    const Quatf& getOrientation() const { return orientation_; }
+    float getLookDistance() const { return look_distance_; }
     const std::string& getName() const { return name_; }
     bool getActive() const { return active_; }
     GraphicsApi getGraphicsApi() const { return graphics_api_; }
@@ -48,6 +46,7 @@ class TestCameraBaseHarness : public CameraBase {
         lookAtImpl(position, target, up);
     }
     void callLookAtImpl(const Vec3f& target, const Vec3f& up) noexcept { lookAtImpl(target, up); }
+    void callSetTargetImpl(const Vec3f& target) noexcept { setTargetImpl(target); }
 };
 
 }  // namespace
@@ -132,16 +131,27 @@ TEST(CameraBaseTest, LookAtImpl_ThreeArg_MarksViewMatrixDirty) {
     EXPECT_TRUE(h.isViewMatrixDirty());
 }
 
+TEST(CameraBaseTest, LookAtImpl_ThreeArg_DegenerateTarget_SetsLookDistanceZero) {
+    TestCameraBaseHarness h;
+    const Vec3f pos(2.0f, 3.0f, 4.0f);
+    const Vec3f up(0.0f, 1.0f, 0.0f);
+    h.callLookAtImpl(pos, pos, up);
+
+    EXPECT_NEAR(h.getLookDistance(), 0.0f, kTol);
+    EXPECT_TRUE(h.getTarget().areSame(pos, kTol));
+    EXPECT_NEAR(h.getPosition().x(), pos.x(), kTol);
+    EXPECT_NEAR(h.getPosition().y(), pos.y(), kTol);
+    EXPECT_NEAR(h.getPosition().z(), pos.z(), kTol);
+}
+
 //==============================================================================
 // lookAtImpl(target, up) — keeps position
 //==============================================================================
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_KeepsPositionUnchanged) {
     TestCameraBaseHarness h;
-    // Establish a known position via the three-argument overload.
     Vec3f initialPos(5.0f, 5.0f, 5.0f);
     h.callLookAtImpl(initialPos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-    // Call the two-argument overload; position must remain unchanged.
     h.callLookAtImpl(Vec3f(1.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
     EXPECT_NEAR(h.getPosition().x(), initialPos.x(), kTol);
     EXPECT_NEAR(h.getPosition().y(), initialPos.y(), kTol);
@@ -150,10 +160,8 @@ TEST(CameraBaseTest, LookAtImpl_TwoArg_KeepsPositionUnchanged) {
 
 TEST(CameraBaseTest, LookAtImpl_TwoArg_UpdatesTargetAndUp) {
     TestCameraBaseHarness h;
-    // Establish initial pose via the three-argument overload.
     Vec3f pos(1.0f, 0.0f, 0.0f);
     h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
-    // Call the two-argument overload; target and up must change, position must not.
     Vec3f newTarget(2.0f, 0.0f, 0.0f);
     Vec3f newUp(0.0f, 0.0f, 1.0f);
     h.callLookAtImpl(newTarget, newUp);
@@ -172,4 +180,47 @@ TEST(CameraBaseTest, LookAtImpl_TwoArg_MarksViewMatrixDirty) {
     TestCameraBaseHarness h;
     h.callLookAtImpl(Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
     EXPECT_TRUE(h.isViewMatrixDirty());
+}
+
+TEST(CameraBaseTest, LookAtImpl_TwoArg_DegenerateTarget_SetsLookDistanceZero) {
+    TestCameraBaseHarness h;
+    const Vec3f pos(5.0f, 5.0f, 5.0f);
+    h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    ASSERT_GT(h.getLookDistance(), kTol);
+
+    const Vec3f up(0.0f, 1.0f, 0.0f);
+    h.callLookAtImpl(pos, up);
+
+    EXPECT_NEAR(h.getLookDistance(), 0.0f, kTol);
+    EXPECT_TRUE(h.getTarget().areSame(pos, kTol));
+}
+
+//==============================================================================
+// setTargetImpl — degenerate target (coincident with eye)
+//==============================================================================
+
+TEST(CameraBaseTest, SetTargetImpl_DegenerateTarget_SetsLookDistanceZeroAndMatchesGetTarget) {
+    TestCameraBaseHarness h;
+    const Vec3f pos(0.0f, 0.0f, 5.0f);
+    h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    ASSERT_GT(h.getLookDistance(), kTol);
+
+    h.callSetTargetImpl(pos);
+
+    EXPECT_NEAR(h.getLookDistance(), 0.0f, kTol);
+    EXPECT_TRUE(h.getTarget().areSame(pos, kTol));
+}
+
+TEST(CameraBaseTest, SetTargetImpl_NearDegenerateTarget_TreatedAsCoincident) {
+    TestCameraBaseHarness h;
+    const Vec3f pos(1.0f, 2.0f, 3.0f);
+    h.callLookAtImpl(pos, Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+    ASSERT_GT(h.getLookDistance(), kTol);
+
+    // Sub-kEps separation from eye (camera_base uses 1e-6f epsilon).
+    const Vec3f almost_same = pos + Vec3f(1e-7f, 0.0f, 0.0f);
+    h.callSetTargetImpl(almost_same);
+
+    EXPECT_NEAR(h.getLookDistance(), 0.0f, kTol);
+    EXPECT_TRUE(h.getTarget().areSame(pos, kTol));
 }

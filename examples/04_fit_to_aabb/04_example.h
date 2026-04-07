@@ -1,11 +1,12 @@
+#pragma once
 /* ---------------------------------------------------------------------
  * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  * ----------------------------------------------------------------------
  */
 
-#include "06_example.h"
+namespace vne::scene::examples {
 
-int main() {
-    return vne::scene::examples::runShadowSettingsExample();
-}
+int runFitToAabbExample();
+
+}  // namespace vne::scene::examples

@@ -67,7 +67,7 @@ TEST(CameraTransformAdapter, SyncNodeFromCamera_RoundTripStable) {
     Vec3f actualForward = (cam2->getTarget() - cam2->getPosition()).normalized();
     float dot = expectedForward.x() * actualForward.x() + expectedForward.y() * actualForward.y()
                 + expectedForward.z() * actualForward.z();
-    EXPECT_GE(std::abs(dot), 0.99f);
+    EXPECT_GE(dot, 0.99f);
 }
 
 TEST(CameraTransformAdapter, UpVectorHandling_NoRollDrift) {
@@ -88,12 +88,36 @@ TEST(CameraTransformAdapter, UpVectorHandling_NoRollDrift) {
     EXPECT_GT(up.y(), 0.5f);
 }
 
+TEST(CameraTransformAdapter, SyncCameraFromNode_ForwardDirectionCorrect) {
+    // Camera looks from (5, 0, 10) toward origin. Pack to node, restore to cam2.
+    // Verify cam2's forward direction points toward origin (not away from it).
+    PerspectiveCameraParameters params(60.0f, 1.0f, 0.1f, 100.0f);
+    auto cam = CameraFactory::createPerspective(params);
+    Vec3f pos(5.0f, 0.0f, 10.0f);
+    cam->setPosition(pos);
+    cam->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    cam->setUp(Vec3f(0.0f, 1.0f, 0.0f));
+    cam->updateMatrices();
+
+    TransformNode node;
+    syncTransformNodeFromCamera(node, *cam);
+
+    auto cam2 = CameraFactory::createPerspective(params);
+    syncCameraFromTransformNode(*cam2, node);
+
+    Vec3f expected_fwd = (Vec3f(0.0f, 0.0f, 0.0f) - pos).normalized();
+    Vec3f actual_fwd = cam2->getForwardDir();
+    float dot =
+        expected_fwd.x() * actual_fwd.x() + expected_fwd.y() * actual_fwd.y() + expected_fwd.z() * actual_fwd.z();
+    EXPECT_GE(dot, 0.99f) << "Camera forward should point toward the original target, not away from it";
+}
+
 TEST(CameraTransformAdapter, OrthographicAndPerspective_BothSupported) {
     PerspectiveCameraParameters pparams(60.0f, 1.0f, 0.1f, 100.0f);
     auto pers = CameraFactory::createPerspective(pparams);
     pers->setPosition(Vec3f(1.0f, 0.0f, 5.0f));
-    pers->setTarget(Vec3f(0, 0, 0));
-    pers->setUp(Vec3f(0, 1, 0));
+    pers->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    pers->setUp(Vec3f(0.0f, 1.0f, 0.0f));
     pers->updateMatrices();
 
     TransformNode nodeP;
@@ -102,11 +126,11 @@ TEST(CameraTransformAdapter, OrthographicAndPerspective_BothSupported) {
     syncCameraFromTransformNode(*pers2, nodeP);
     EXPECT_TRUE(pers2->getPosition().areSame(pers->getPosition(), kTolerance));
 
-    OrthographicCameraParameters oparams(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
+    OrthographicCameraParameters oparams(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f);
     auto ortho = CameraFactory::createOrthographic(oparams);
     ortho->setPosition(Vec3f(0.0f, 0.0f, 10.0f));
-    ortho->setTarget(Vec3f(0, 0, 0));
-    ortho->setUp(Vec3f(0, 1, 0));
+    ortho->setTarget(Vec3f(0.0f, 0.0f, 0.0f));
+    ortho->setUp(Vec3f(0.0f, 1.0f, 0.0f));
     ortho->updateMatrices();
 
     TransformNode nodeO;

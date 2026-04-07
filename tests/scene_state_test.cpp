@@ -122,3 +122,43 @@ TEST(SceneState, DeterministicLightOrder) {
     EXPECT_EQ(state.getLights()[0], a);
     EXPECT_EQ(state.getLights()[1], c);
 }
+
+TEST(SceneState, MoveConstruct_TransfersOwnership) {
+    SceneState src;
+    PerspectiveCameraParameters params(60.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+    auto cam = CameraFactory::createPerspective(params);
+    src.setActiveCamera(cam);
+    auto light = std::make_shared<AmbientLight>(Vec3f(1, 1, 1), 0.5f, "a");
+    src.addLight(light);
+
+    SceneState dst(std::move(src));
+
+    EXPECT_TRUE(dst.hasActiveCamera());
+    EXPECT_EQ(dst.getActiveCamera(), cam);
+    EXPECT_EQ(dst.getLightCount(), 1u);
+    EXPECT_EQ(dst.getLights()[0], light);
+
+    // Source is in a valid but unspecified state — must not crash.
+    EXPECT_FALSE(src.hasActiveCamera());
+}
+
+TEST(SceneState, MoveAssign_TransfersOwnership) {
+    SceneState src;
+    auto light = std::make_shared<AmbientLight>(Vec3f(1, 1, 1), 0.5f, "x");
+    src.addLight(light);
+    src.setMaxLights(5);
+
+    SceneState dst;
+    dst = std::move(src);
+
+    EXPECT_EQ(dst.getLightCount(), 1u);
+    EXPECT_EQ(dst.getMaxLights(), 5u);
+    EXPECT_FALSE(src.hasActiveCamera());
+    EXPECT_EQ(src.getLightCount(), 0u);
+}
+
+TEST(SceneState, AddLight_NullIgnored) {
+    SceneState state;
+    state.addLight(nullptr);
+    EXPECT_EQ(state.getLightCount(), 0u);
+}

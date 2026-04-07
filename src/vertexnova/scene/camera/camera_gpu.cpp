@@ -62,6 +62,52 @@ CameraGpu makeCameraGpuFromMatricesAndParams(const vne::math::Mat4f& view,
     out.far_viewport.y = viewport_width;
     out.far_viewport.z = viewport_height;
     out.far_viewport.w = 0.0f;
+    out.forward_dir.x = 0.0f;
+    out.forward_dir.y = 0.0f;
+    out.forward_dir.z = 0.0f;
+    out.forward_dir.w = 0.0f;
+    out.right_dir.x = 0.0f;
+    out.right_dir.y = 0.0f;
+    out.right_dir.z = 0.0f;
+    out.right_dir.w = 0.0f;
+    out.up_dir.x = 0.0f;
+    out.up_dir.y = 0.0f;
+    out.up_dir.z = 0.0f;
+    out.up_dir.w = 0.0f;
+    return out;
+}
+
+CameraGpu makeCameraGpuFromMatricesAndParams(const vne::math::Mat4f& view,
+                                             const vne::math::Mat4f& proj,
+                                             const vne::math::Mat4f& view_proj,
+                                             const vne::math::Vec3f& position,
+                                             float near_plane,
+                                             float far_plane,
+                                             float viewport_width,
+                                             float viewport_height,
+                                             const vne::math::Vec3f& forward_dir,
+                                             const vne::math::Vec3f& right_dir,
+                                             const vne::math::Vec3f& up_dir) noexcept {
+    CameraGpu out = makeCameraGpuFromMatricesAndParams(view,
+                                                       proj,
+                                                       view_proj,
+                                                       position,
+                                                       near_plane,
+                                                       far_plane,
+                                                       viewport_width,
+                                                       viewport_height);
+    out.forward_dir.x = forward_dir.x();
+    out.forward_dir.y = forward_dir.y();
+    out.forward_dir.z = forward_dir.z();
+    out.forward_dir.w = 0.0f;
+    out.right_dir.x = right_dir.x();
+    out.right_dir.y = right_dir.y();
+    out.right_dir.z = right_dir.z();
+    out.right_dir.w = 0.0f;
+    out.up_dir.x = up_dir.x();
+    out.up_dir.y = up_dir.y();
+    out.up_dir.z = up_dir.z();
+    out.up_dir.w = 0.0f;
     return out;
 }
 

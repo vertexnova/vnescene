@@ -7,6 +7,20 @@ if(NOT TARGET vnescene)
     return()
 endif()
 
+#------------------------------------------------------------------------------
+# Register one example: main.cpp + extra sources; link vne::scene; include ../ for common/
+#------------------------------------------------------------------------------
+macro(vne_add_example target_name)
+    add_executable(${target_name} main.cpp ${ARGN})
+    target_link_libraries(${target_name} PRIVATE vne::scene)
+    target_include_directories(${target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+    set_target_properties(${target_name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/examples"
+    )
+    add_test(NAME ${target_name} COMMAND "$<TARGET_FILE:${target_name}>")
+    set_tests_properties(${target_name} PROPERTIES LABELS "vnescene;examples")
+endmacro()
+
 # 01 - Basic: minimal scene (camera + lights) with logging guard
 add_subdirectory(01_basic)
 

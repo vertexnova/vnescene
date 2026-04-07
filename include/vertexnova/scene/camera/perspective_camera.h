@@ -62,20 +62,30 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
 
     /** @brief Get camera position in world space. */
     [[nodiscard]] vne::math::Vec3f getPosition() const noexcept override;
-    /** @brief Set camera position. */
+    /** @brief Set camera position (orientation unchanged; derived target moves with the eye). */
     void setPosition(const vne::math::Vec3f& position) noexcept override;
-    /** @brief Get look-at target. */
+    /** @brief Get look-at target (derived from orientation and look distance). */
     [[nodiscard]] vne::math::Vec3f getTarget() const noexcept override;
-    /** @brief Set look-at target. */
+    /** @brief Set look-at target (recomputes orientation and look distance). */
     void setTarget(const vne::math::Vec3f& target) noexcept override;
-    /** @brief Get up vector. */
+    /**
+     * @brief Stored up hint used to reconstruct orientation with @c orientationFromPosBack (same path as
+     * @c lookAtImpl / @c setOrientationViewImpl). It is intentionally mutable during orbit: @c rotateAroundTarget
+     * updates it like a trackball so @c getUp reflects the evolved frame (see @c TrackballStrategy::syncFromCamera).
+     */
     [[nodiscard]] vne::math::Vec3f getUp() const noexcept override;
-    /** @brief Set up vector. */
+    /** @brief Set up hint and re-derive orientation for the current view direction. */
     void setUp(const vne::math::Vec3f& up) noexcept override;
+
+    [[nodiscard]] vne::math::Quatf getOrientation() const noexcept override;
+    void setOrientationView(const vne::math::Vec3f& position, const vne::math::Quatf& orientation) noexcept override;
+    [[nodiscard]] vne::math::Vec3f getForwardDir() const noexcept override;
+    [[nodiscard]] vne::math::Vec3f getRightDir() const noexcept override;
+    [[nodiscard]] vne::math::Vec3f getUpDir() const noexcept override;
 
     /** @brief Get current view matrix. */
     [[nodiscard]] vne::math::Mat4f getViewMatrix() const noexcept override;
-    /** @brief Recompute view matrix from position/target/up. */
+    /** @brief Recompute view matrix from quaternion pose, position, and scene scale. */
     void updateViewMatrix() noexcept override;
     /** @brief Get current projection matrix. */
     [[nodiscard]] vne::math::Mat4f getProjectionMatrix() const noexcept override;
@@ -155,7 +165,12 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     void moveRight(float distance) noexcept;
     /** @brief Move camera along up by distance. */
     void moveUp(float distance) noexcept;
-    /** @brief Orbit around current target by yaw and pitch angles (degrees). */
+    /**
+     * @brief Orbit around current target by yaw and pitch (degrees); trackball-style update of @c up_hint_.
+     *
+     * Mutates @c up_hint_ so the reconstructed orientation via @c orientationFromPosBack stays consistent
+     * with @c lookAtImpl / @c setOrientationViewImpl; @c getUp() reflects the evolved hint.
+     */
     void rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept;
 
    private:

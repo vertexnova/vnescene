@@ -66,21 +66,40 @@ void OrthographicCamera::setPosition(const Vec3f& position) noexcept {
 }
 
 Vec3f OrthographicCamera::getTarget() const noexcept {
-    return target_;
+    return targetImpl();
 }
 
 void OrthographicCamera::setTarget(const Vec3f& target) noexcept {
-    target_ = target;
-    view_matrix_dirty_ = true;
+    setTargetImpl(target);
 }
 
 Vec3f OrthographicCamera::getUp() const noexcept {
-    return up_;
+    return up_hint_;
 }
 
 void OrthographicCamera::setUp(const Vec3f& up) noexcept {
-    up_ = up;
-    view_matrix_dirty_ = true;
+    setUpImpl(up);
+}
+
+Quatf OrthographicCamera::getOrientation() const noexcept {
+    return orientation_;
+}
+
+void OrthographicCamera::setOrientationView(const Vec3f& position, const Quatf& orientation) noexcept {
+    setOrientationViewImpl(position, orientation);
+    updateMatrices();
+}
+
+Vec3f OrthographicCamera::getForwardDir() const noexcept {
+    return forwardDirImpl();
+}
+
+Vec3f OrthographicCamera::getRightDir() const noexcept {
+    return rightDirImpl();
+}
+
+Vec3f OrthographicCamera::getUpDir() const noexcept {
+    return upDirImpl();
 }
 
 Mat4f OrthographicCamera::getViewMatrix() const noexcept {
@@ -91,8 +110,7 @@ Mat4f OrthographicCamera::getViewMatrix() const noexcept {
 }
 
 void OrthographicCamera::updateViewMatrixImpl() noexcept {
-    const Mat4f look_at = Mat4f::lookAt(position_, target_, up_, graphics_api_);
-    view_matrix_ = composeViewWithSceneScale(look_at, scene_scale_);
+    view_matrix_ = viewFromQuaternion(graphics_api_, scene_scale_);
     view_matrix_dirty_ = false;
 }
 
@@ -198,8 +216,8 @@ void OrthographicCamera::setBounds(
     right_ = right;
     bottom_ = bottom;
     top_ = top;
-    near_plane_ = near_plane;
-    far_plane_ = far_plane;
+    near_plane_ = std::max(kMinNearPlane, near_plane);
+    far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 
@@ -249,7 +267,10 @@ CameraGpu OrthographicCamera::toGpu() const noexcept {
                                               getNearPlane(),
                                               getFarPlane(),
                                               getWidth(),
-                                              getHeight());
+                                              getHeight(),
+                                              getForwardDir(),
+                                              getRightDir(),
+                                              getUpDir());
 }
 
 }  // namespace vne::scene

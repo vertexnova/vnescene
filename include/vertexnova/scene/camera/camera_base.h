@@ -17,14 +17,15 @@
  * This header is part of the public scene API surface because
  * PerspectiveCamera and OrthographicCamera (both public types) inherit
  * from CameraBase. However, CameraBase itself is not a public polymorphic
- * interface like ICamera — it carries only data and shared implementations
- * for position/target/up, dirty-flag management, scene-scale, name, and
+ * interface like ICamera — it carries data and shared implementations
+ * for quaternion-native pose, dirty-flag management, scene-scale, name, and
  * active state. All constructors and members are protected.
  */
 
 #include "vertexnova/scene/export.h"
 #include <vertexnova/math/core/core.h>
 #include <string>
+#include <utility>
 
 namespace vne::scene {
 
@@ -32,10 +33,9 @@ namespace vne::scene {
  * @class CameraBase
  * @brief Protected non-virtual base for PerspectiveCamera and OrthographicCamera.
  *
- * Holds all shared member variables and provides default implementations
- * for methods that are identical across both camera types. Concrete cameras
- * inherit this class using @c protected inheritance and call its helpers
- * from their ICamera overrides.
+ * Primary pose state is camera-to-world @c orientation_ plus @c look_distance_;
+ * @c getTarget() is derived. @c up_hint_ is the stored look-at hint returned by
+ * @c getUp().
  */
 class VNE_SCENE_API CameraBase {
    protected:
@@ -44,40 +44,59 @@ class VNE_SCENE_API CameraBase {
         : name_(std::move(name)) {}
     ~CameraBase() noexcept = default;
 
-    // Copy/move defaulted; concrete cameras manage their own copy/move semantics.
     CameraBase(const CameraBase&) = default;
     CameraBase& operator=(const CameraBase&) = default;
     CameraBase(CameraBase&&) noexcept = default;
     CameraBase& operator=(CameraBase&&) noexcept = default;
 
     //--------------------------------------------------------------------------
-    // Pose helpers — set position/target/up atomically with one dirty mark
+    // Pose — lookAtImpl defined in camera_base.cpp
     //--------------------------------------------------------------------------
 
-    /** @brief Set position, target, and up at once; marks view dirty. */
+    /** @brief Unit back vector and look distance from eye→target, with degeneracy fallback to @a orientation_fallback.
+     */
+    [[nodiscard]] static std::pair<vne::math::Vec3f, float> resolveBackUnitAndLookDistance(
+        const vne::math::Vec3f& eye,
+        const vne::math::Vec3f& target,
+        const vne::math::Quatf& orientation_fallback) noexcept;
+
     void lookAtImpl(const vne::math::Vec3f& position,
                     const vne::math::Vec3f& target,
-                    const vne::math::Vec3f& up) noexcept {
-        position_ = position;
-        target_ = target;
-        up_ = up;
-        view_matrix_dirty_ = true;
-    }
+                    const vne::math::Vec3f& up) noexcept;
 
-    /** @brief Keep current position; change target and up; marks view dirty. */
-    void lookAtImpl(const vne::math::Vec3f& target, const vne::math::Vec3f& up) noexcept {
-        target_ = target;
-        up_ = up;
-        view_matrix_dirty_ = true;
-    }
+    void lookAtImpl(const vne::math::Vec3f& target, const vne::math::Vec3f& up) noexcept;
 
     /**
-     * @brief Apply scene zoom in the image plane after lookAt.
+     * @brief Derive camera-to-world orientation from unit back vector and up hint.
+     *
+     * Matches the orthonormal basis construction used by
+     * vneinteraction::TrackballStrategy::syncFromCamera: @c right = up×back,
+     * with @p fallback_up used when @c up_hint×back is degenerate (parallel).
+     */
+    [[nodiscard]] static vne::math::Quatf orientationFromPosBack(
+        vne::math::Vec3f back_unit,
+        vne::math::Vec3f up_hint,
+        const vne::math::Vec3f& fallback_up = vne::math::Vec3f(0.0f, 1.0f, 0.0f)) noexcept;
+
+    [[nodiscard]] vne::math::Mat4f viewFromQuaternion(vne::math::GraphicsApi api, float scene_scale) const noexcept;
+
+    void setTargetImpl(const vne::math::Vec3f& target) noexcept;
+    void setUpImpl(const vne::math::Vec3f& up) noexcept;
+
+    void setOrientationViewImpl(const vne::math::Vec3f& pos, const vne::math::Quatf& q) noexcept;
+
+    [[nodiscard]] vne::math::Vec3f forwardDirImpl() const noexcept { return -orientation_.getZAxis(); }
+    [[nodiscard]] vne::math::Vec3f rightDirImpl() const noexcept { return orientation_.getXAxis(); }
+    [[nodiscard]] vne::math::Vec3f upDirImpl() const noexcept { return orientation_.getYAxis(); }
+    [[nodiscard]] vne::math::Vec3f targetImpl() const noexcept { return position_ + forwardDirImpl() * look_distance_; }
+
+    /**
+     * @brief Apply scene zoom in the image plane after the view matrix is built.
      *
      * Uses scale(s, s, 1) so view-space depth is not scaled; projection near/far stay consistent
-     * with geometry (uniform scale(s,s,s) on the view broke clip-space depth).
+     * with geometry (uniform scale(s,s,s) on the view would break clip-space depth).
      *
-     * @param look_at_view View matrix from Mat4f::lookAt (no scene scale applied yet).
+     * @param look_at_view View matrix from quaternion (or legacy look-at); no scene scale yet.
      * @param scene_scale XY scale factor; 1.0 returns @a look_at_view unchanged.
      */
     [[nodiscard]] static vne::math::Mat4f composeViewWithSceneScale(const vne::math::Mat4f& look_at_view,
@@ -92,11 +111,13 @@ class VNE_SCENE_API CameraBase {
     // Shared member state
     //--------------------------------------------------------------------------
 
-    vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};  //!< Camera position in world space.
-    vne::math::Vec3f target_{0.0f, 0.0f, -1.0f};   //!< Look-at target point.
-    vne::math::Vec3f up_{0.0f, 1.0f, 0.0f};        //!< Up vector for view orientation.
-    std::string name_;                             //!< Camera name.
-    bool active_ = true;                           //!< Whether this camera is active for rendering.
+    vne::math::Vec3f position_{0.0f, 0.0f, 0.0f};                 //!< Eye position in world space.
+    vne::math::Quatf orientation_{vne::math::Quatf::identity()};  //!< Camera-to-world rotation.
+    float look_distance_ = 1.0f;                                  //!< Eye-to-derived-target distance.
+    vne::math::Vec3f up_hint_{0.0f, 1.0f, 0.0f};                  //!< Stored hint; @c getUp() returns this.
+
+    std::string name_;    //!< Camera name.
+    bool active_ = true;  //!< Whether this camera is active for rendering.
     vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};  //!< Backend for view/projection.
     float scene_scale_ = 1.0f;  //!< XY zoom factor baked into the view (see composeViewWithSceneScale).
 
