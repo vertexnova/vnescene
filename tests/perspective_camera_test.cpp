@@ -191,20 +191,6 @@ TEST(PerspectiveCameraTest, MoveUp_TranslatesPositionDerivedTargetFollows) {
     EXPECT_NEAR(cam.getTarget().y(), 2.0f, kTol);
 }
 
-TEST(PerspectiveCameraTest, RotateAroundTarget_ChangesPositionNotTarget) {
-    PerspectiveCamera cam = makePerspective();
-    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
-    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
-    Vec3f target_before = cam.getTarget();
-    cam.rotateAroundTarget(90.0f, 0.0f);
-    EXPECT_NEAR(cam.getTarget().x(), target_before.x(), kTol);
-    EXPECT_NEAR(cam.getTarget().y(), target_before.y(), kTol);
-    EXPECT_NEAR(cam.getTarget().z(), target_before.z(), kTol);
-    float dist_before = (Vec3f(0.0f, 0.0f, 5.0f) - Vec3f(0.0f, 0.0f, 0.0f)).length();
-    float dist_after = (cam.getPosition() - cam.getTarget()).length();
-    EXPECT_NEAR(dist_after, dist_before, kTol);
-}
-
 //==============================================================================
 // Scene-scale (class-specific: view matrix reflects scale)
 //==============================================================================

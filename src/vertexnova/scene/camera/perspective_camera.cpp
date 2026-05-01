@@ -268,24 +268,6 @@ void PerspectiveCamera::moveUp(float distance) noexcept {
     view_matrix_dirty_ = true;
 }
 
-// Trackball orbit: up_hint_ evolves with the pitch axis so orientationFromPosBack matches the rotated frame
-// (same up_hint_ role as lookAtImpl / setOrientationViewImpl; TrackballStrategy::syncFromCamera reads this state).
-void PerspectiveCamera::rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept {
-    const Vec3f coi = targetImpl();
-    Vec3f back = orientation_.getZAxis();
-    const Quatf yaw = Quatf::fromAxisAngle(up_hint_, degToRad(yaw_angle));
-    back = yaw.rotate(back);
-    Vec3f right = back.cross(up_hint_);
-    float rl = right.length();
-    right = (rl < kEpsilon) ? Vec3f(1.0f, 0.0f, 0.0f) : right / rl;
-    const Quatf pitch = Quatf::fromAxisAngle(right, degToRad(pitch_angle));
-    back = pitch.rotate(back).normalized();
-    up_hint_ = pitch.rotate(up_hint_).normalized();
-    position_ = coi + back * look_distance_;
-    orientation_ = orientationFromPosBack(back, up_hint_, Vec3f(0.0f, 1.0f, 0.0f));
-    view_matrix_dirty_ = true;
-}
-
 CameraGpu PerspectiveCamera::toGpu() const noexcept {
     Mat4f view = getViewMatrix();
     Mat4f proj = getProjectionMatrix();

@@ -32,7 +32,7 @@ There is no dependency on a specific graphics API; camera and light data are pac
 - **camera.h**: `ICamera` — base interface (view/projection, position/target/up, name, active flag). Includes `resize`, `lookAt(position, target, up)` / `lookAt(target, up)`, `setClipPlanes`, `getSceneScale` / `setSceneScale`, and `getClipToScreenMatrix` for use across all camera types.
 - **camera_base.h**: `CameraBase` — protected shared base for `PerspectiveCamera` and `OrthographicCamera` (shared state and pose helpers); not part of the public polymorphic API.
 - **camera_types.h**: `CameraType`, `CameraParameters`, and related types.
-- **perspective_camera.h**: `PerspectiveCamera` — perspective projection, FOV, aspect, near/far; movement helpers (`getForward`, `moveForward`, `rotateAroundTarget`, etc.).
+- **perspective_camera.h**: `PerspectiveCamera` — perspective projection, FOV, aspect, near/far; movement helpers (`getForward`, `moveForward`, `moveRight`, `moveUp`, etc.).
 - **orthographic_camera.h**: `OrthographicCamera` — ortho projection and bounds; `setBounds`, `getAspectRatio`.
 - **camera_factory.h**: `CameraFactory` — create cameras by type.
 - **camera_utils.h**: Utilities such as `fitToAabb`, `project`, `screenToWorldRay`.
