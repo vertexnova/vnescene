@@ -10,6 +10,7 @@
  */
 
 #include "vertexnova/scene/light/directional_light.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/constants.h>
 #include <vertexnova/math/core/core.h>
 #include <algorithm>
@@ -19,9 +20,14 @@ namespace vne::scene {
 
 using namespace vne::math;
 
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.directional_light")
+}  // namespace
+
 static Vec3f normalizeSafe(const Vec3f& v) noexcept {
     float len = v.length();
     if (len <= kFloatEpsilon) {
+        VNE_LOG_WARN << "DirectionalLight: near-zero direction vector, falling back to (0,-1,0)";
         return {0.0f, -1.0f, 0.0f};
     }
     return v / len;
@@ -32,7 +38,9 @@ DirectionalLight::DirectionalLight(const Vec3f& direction, const Vec3f& color, f
     , color_(color)
     , intensity_(intensity)
     , name_(std::move(name))
-    , enabled_(true) {}
+    , enabled_(true) {
+    VNE_LOG_INFO << "DirectionalLight \"" << name_ << "\" created";
+}
 
 LightType DirectionalLight::getLightType() const noexcept {
     return LightType::eDirectional;

@@ -10,11 +10,13 @@
  */
 
 #include "vertexnova/scene/light/point_light.h"
+#include <vertexnova/logging/logging.h>
 #include <algorithm>
 
 namespace vne::scene {
 
 namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.point_light");
 
 constexpr float kMinRange = 0.001f;
 // LightGpu misc.x: 0=Ambient, 1=Directional, 2=Point, 3=Spot
@@ -29,7 +31,9 @@ PointLight::PointLight(
     , intensity_(std::max(0.0f, intensity))
     , range_(std::max(kMinRange, range))
     , name_(std::move(name))
-    , enabled_(true) {}
+    , enabled_(true) {
+    VNE_LOG_INFO << "PointLight \"" << name_ << "\" created (range=" << range_ << ")";
+}
 
 void PointLight::setIntensity(float intensity) noexcept {
     intensity_ = std::max(0.0f, intensity);

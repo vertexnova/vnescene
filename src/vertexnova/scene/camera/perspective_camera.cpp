@@ -11,6 +11,7 @@
 
 #include "vertexnova/scene/camera/perspective_camera.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/core.h>
 #include <vertexnova/math/projection_utils.h>
 
@@ -21,6 +22,8 @@ namespace vne::scene {
 using namespace vne::math;
 
 namespace {
+
+CREATE_VNE_LOGGER_CATEGORY("vnescene.perspective_camera");
 
 constexpr float kMinFovDeg = 1.0f;
 constexpr float kMaxFovDeg = 179.0f;
@@ -42,6 +45,8 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_p
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
     vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, aspect=" << aspect_ratio_
+                 << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 PerspectiveCamera::PerspectiveCamera(
@@ -57,6 +62,8 @@ PerspectiveCamera::PerspectiveCamera(
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
     vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, " << width_ << "x"
+                 << height_ << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {
@@ -182,6 +189,10 @@ void PerspectiveCamera::setName(const std::string& name) noexcept {
 }
 
 void PerspectiveCamera::setFieldOfView(float fov) noexcept {
+    if (fov < kMinFovDeg || fov > kMaxFovDeg) {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": FOV " << fov << " clamped to [" << kMinFovDeg << ", "
+                     << kMaxFovDeg << "]";
+    }
     fov_ = std::clamp(fov, kMinFovDeg, kMaxFovDeg);
     projection_matrix_dirty_ = true;
 }
@@ -223,6 +234,9 @@ void PerspectiveCamera::resize(float width, float height) noexcept {
     height_ = height;
     if (height > 0.0f) {
         aspect_ratio_ = width / height;
+    } else {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": resize height=" << height
+                     << " <= 0, aspect ratio unchanged";
     }
     projection_matrix_dirty_ = true;
 }
@@ -236,6 +250,10 @@ void PerspectiveCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 }
 
 void PerspectiveCamera::setSceneScale(float scale) noexcept {
+    if (scale <= 0.0f) {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": setSceneScale(" << scale
+                     << ") <= 0, clamped to " << kMinSceneScale;
+    }
     // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
     scene_scale_ = std::max(kMinSceneScale, scale);
     view_matrix_dirty_ = true;

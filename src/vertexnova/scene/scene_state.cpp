@@ -10,12 +10,22 @@
  */
 
 #include "vertexnova/scene/scene_state.h"
+#include <vertexnova/logging/logging.h>
 #include <algorithm>
 
 namespace vne::scene {
 
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.scene")
+}  // namespace
+
 void SceneState::setActiveCamera(CameraPtr camera) noexcept {
     active_camera_ = std::move(camera);
+    if (active_camera_) {
+        VNE_LOG_INFO << "SceneState: active camera set to \"" << active_camera_->getName() << "\"";
+    } else {
+        VNE_LOG_INFO << "SceneState: active camera cleared";
+    }
 }
 
 SceneState::CameraPtr SceneState::getActiveCamera() const noexcept {
@@ -28,12 +38,16 @@ bool SceneState::hasActiveCamera() const noexcept {
 
 void SceneState::addLight(LightPtr light) {
     if (!light) {
+        VNE_LOG_WARN << "SceneState::addLight: null light ignored";
         return;
     }
     lights_.push_back(std::move(light));
     // If max_lights_ is set, we keep only the last N (FIFO drop)
     if (max_lights_ > 0 && lights_.size() > max_lights_) {
-        lights_.erase(lights_.begin(), lights_.begin() + static_cast<ptrdiff_t>(lights_.size() - max_lights_));
+        const auto excess = static_cast<ptrdiff_t>(lights_.size() - max_lights_);
+        VNE_LOG_INFO << "SceneState::addLight: light limit " << max_lights_ << " exceeded, dropping " << excess
+                     << " oldest light(s)";
+        lights_.erase(lights_.begin(), lights_.begin() + excess);
     }
 }
 

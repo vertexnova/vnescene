@@ -10,15 +10,22 @@
  */
 
 #include "vertexnova/scene/light/ambient_light.h"
+#include <vertexnova/logging/logging.h>
 #include <algorithm>
 
 namespace vne::scene {
+
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.ambient_light")
+}  // namespace
 
 AmbientLight::AmbientLight(const vne::math::Vec3f& color, float intensity, std::string name)
     : color_(color)
     , intensity_(std::max(0.0f, intensity))
     , name_(std::move(name))
-    , enabled_(true) {}
+    , enabled_(true) {
+    VNE_LOG_INFO << "AmbientLight \"" << name_ << "\" created (intensity=" << intensity_ << ")";
+}
 
 void AmbientLight::setIntensity(float intensity) noexcept {
     intensity_ = std::max(0.0f, intensity);
