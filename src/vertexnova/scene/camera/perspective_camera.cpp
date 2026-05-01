@@ -41,6 +41,7 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_p
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 PerspectiveCamera::PerspectiveCamera(
@@ -55,6 +56,7 @@ PerspectiveCamera::PerspectiveCamera(
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {
@@ -88,7 +90,10 @@ Quatf PerspectiveCamera::getOrientation() const noexcept {
 
 void PerspectiveCamera::setOrientationView(const Vec3f& position, const Quatf& orientation) noexcept {
     setOrientationViewImpl(position, orientation);
-    updateMatrices();
+    // Only view changed — skip projection recompute (called every frame by Navigation3D).
+    updateViewMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 Vec3f PerspectiveCamera::getForwardDir() const noexcept {
@@ -113,6 +118,7 @@ Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
 void PerspectiveCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = viewFromQuaternion(graphics_api_, scene_scale_);
     view_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::updateViewMatrix() noexcept {
@@ -130,6 +136,7 @@ void PerspectiveCamera::updateProjectionMatrixImpl() noexcept {
     float fov_rad = degToRad(fov_);
     projection_matrix_ = Mat4f::perspective(fov_rad, aspect_ratio_, near_plane_, far_plane_, graphics_api_);
     projection_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::updateProjectionMatrix() noexcept {
@@ -145,7 +152,7 @@ void PerspectiveCamera::setGraphicsApi(GraphicsApi api) noexcept {
 }
 
 Mat4f PerspectiveCamera::getViewProjectionMatrix() const noexcept {
-    if (view_matrix_dirty_ || projection_matrix_dirty_) {
+    if (view_matrix_dirty_ || projection_matrix_dirty_ || vp_matrix_dirty_) {
         const_cast<PerspectiveCamera*>(this)->updateMatrices();
     }
     return view_projection_matrix_;
@@ -155,6 +162,7 @@ void PerspectiveCamera::updateMatrices() noexcept {
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 bool PerspectiveCamera::isActive() const noexcept {
