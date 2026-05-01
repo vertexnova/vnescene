@@ -62,8 +62,8 @@ PerspectiveCamera::PerspectiveCamera(
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
     vp_matrix_dirty_ = false;
-    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, " << width_ << "x"
-                 << height_ << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
+    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, " << width_ << "x" << height_
+                 << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {
@@ -251,8 +251,8 @@ void PerspectiveCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 
 void PerspectiveCamera::setSceneScale(float scale) noexcept {
     if (scale <= 0.0f) {
-        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": setSceneScale(" << scale
-                     << ") <= 0, clamped to " << kMinSceneScale;
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": setSceneScale(" << scale << ") <= 0, clamped to "
+                     << kMinSceneScale;
     }
     // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
     scene_scale_ = std::max(kMinSceneScale, scale);

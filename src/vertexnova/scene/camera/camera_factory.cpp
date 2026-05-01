@@ -75,7 +75,8 @@ std::shared_ptr<ICamera> CameraFactory::create(const CameraParameters& params) n
             if (o) {
                 return createOrthographic(*o);
             }
-            VNE_LOG_WARN << "CameraFactory::create: dynamic_cast to OrthographicCameraParameters failed, using defaults";
+            VNE_LOG_WARN
+                << "CameraFactory::create: dynamic_cast to OrthographicCameraParameters failed, using defaults";
             return createOrthographic(OrthographicCameraParameters{});
         }
         default:
