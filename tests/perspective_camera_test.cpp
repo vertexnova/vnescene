@@ -317,7 +317,7 @@ TEST(PerspectiveCameraTest, ToGpu_ViewProjectionMatchesProductOfViewAndProjectio
     };
     Mat4f view_gpu = col4ToMat(gpu.view_col0, gpu.view_col1, gpu.view_col2, gpu.view_col3);
     Mat4f proj_gpu = col4ToMat(gpu.proj_col0, gpu.proj_col1, gpu.proj_col2, gpu.proj_col3);
-    Mat4f vp_gpu   = col4ToMat(gpu.view_proj_col0, gpu.view_proj_col1, gpu.view_proj_col2, gpu.view_proj_col3);
+    Mat4f vp_gpu = col4ToMat(gpu.view_proj_col0, gpu.view_proj_col1, gpu.view_proj_col2, gpu.view_proj_col3);
     Mat4f expected = proj_gpu * view_gpu;
 
     for (std::size_t c = 0; c < 4; ++c) {
