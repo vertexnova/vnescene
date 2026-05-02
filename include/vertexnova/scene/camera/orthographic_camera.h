@@ -89,7 +89,7 @@ class VNE_SCENE_API OrthographicCamera : public ICamera, protected CameraBase {
     [[nodiscard]] vne::math::Mat4f getProjectionMatrix() const noexcept override;
     /** @brief Recompute projection matrix from frustum bounds. */
     void updateProjectionMatrix() noexcept override;
-    /** @brief Get view * projection matrix. */
+    /** @brief Get projection * view matrix (VP / clip-from-world; same product as @c proj * @c view). */
     [[nodiscard]] vne::math::Mat4f getViewProjectionMatrix() const noexcept override;
     /** @brief Recompute view and projection matrices. */
     void updateMatrices() noexcept override;

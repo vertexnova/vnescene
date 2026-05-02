@@ -64,7 +64,7 @@ The module follows a layered architecture with a clear interface/implementation 
 | `SceneState` | Move-only scene container; one active `ICamera`, bounded `vector<shared_ptr<ILight>>` with FIFO trim |
 | `Environment` | Data-only environment settings; exposure, gamma, clear color, optional HDRI asset id |
 | `Handle<Tag>` | 32-bit slot + 32-bit generation generational handle; `CameraId` and `LightId` are distinct instantiations |
-| `CameraGpu` | GPU-ready packed camera struct; view, projection, VP matrices, position, clip planes, forward/right/up directions |
+| `CameraGpu` | GPU-ready packed camera struct; view, projection, VP (= **P*V**), position, clip planes, forward/right/up directions |
 | `LightGpu` | GPU-ready packed light struct; `color_intensity`, `position_range`, `direction_inner_cos`, `misc` (type, enabled, outer cos) |
 
 ## Key Components
@@ -85,7 +85,7 @@ Abstract base class defining the full camera interface. All operations are `noex
 - `getForwardDir()` / `getRightDir()` / `getUpDir()`: orthonormal camera basis vectors derived from orientation
 - `lookAt(pos, target, up)`: atomic three-parameter pose setter; marks view dirty once
 - `lookAt(target, up)`: keeps current position, updates look direction
-- `getViewMatrix()` / `getProjectionMatrix()` / `getViewProjectionMatrix()`: lazy-evaluated cached matrices
+- `getViewMatrix()` / `getProjectionMatrix()` / `getViewProjectionMatrix()`: lazy-evaluated cached matrices (`getViewProjectionMatrix()` returns **projection * view**, i.e. P*V / clip-from-world)
 - `updateViewMatrix()` / `updateProjectionMatrix()` / `updateMatrices()`: force recompute
 - `resize(width, height)`: updates aspect ratio (perspective) or ortho bounds; recomputes projection
 - `setClipPlanes(near, far)` / `getNearPlane()` / `getFarPlane()`: clip plane management with minimum enforcement

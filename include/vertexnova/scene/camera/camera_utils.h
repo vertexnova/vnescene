@@ -33,7 +33,7 @@ namespace vne::scene {
 /**
  * @brief Build world-space frustum from camera view-projection.
  * @param camera The camera (view and projection taken from it).
- * @return Frustum in world space (extracted from view * projection).
+ * @return Frustum in world space (extracted from VP = projection * view).
  */
 [[nodiscard]] inline vne::math::Frustum buildFrustum(const ICamera& camera) noexcept {
     vne::math::Mat4f vp = camera.getViewProjectionMatrix();

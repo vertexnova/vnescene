@@ -123,11 +123,11 @@ class VNE_SCENE_API CameraBase {
 
     mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};             //!< Cached view matrix.
     mutable vne::math::Mat4f projection_matrix_{vne::math::Mat4f::identity()};       //!< Cached projection matrix.
-    mutable vne::math::Mat4f view_projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached view * projection.
+    mutable vne::math::Mat4f view_projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached projection * view (P*V).
     mutable bool view_matrix_dirty_ = true;        //!< True when view matrix needs recomputation.
     mutable bool projection_matrix_dirty_ = true;  //!< True when projection matrix needs recomputation.
     mutable bool vp_matrix_dirty_ =
-        true;  //!< True when VP = P*V needs recompute (set by view/projection updates, cleared by updateMatrices()).
+        true;  //!< True when VP (= projection * view, i.e. P*V) needs recompute (set by view/projection updates, cleared by updateMatrices()).
 };
 
 }  // namespace vne::scene
