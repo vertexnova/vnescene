@@ -121,13 +121,14 @@ class VNE_SCENE_API CameraBase {
     vne::math::GraphicsApi graphics_api_{vne::math::GraphicsApi::eOpenGL};  //!< Backend for view/projection.
     float scene_scale_ = 1.0f;  //!< XY zoom factor baked into the view (see composeViewWithSceneScale).
 
-    mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};             //!< Cached view matrix.
-    mutable vne::math::Mat4f projection_matrix_{vne::math::Mat4f::identity()};       //!< Cached projection matrix.
-    mutable vne::math::Mat4f view_projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached projection * view (P*V).
+    mutable vne::math::Mat4f view_matrix_{vne::math::Mat4f::identity()};        //!< Cached view matrix.
+    mutable vne::math::Mat4f projection_matrix_{vne::math::Mat4f::identity()};  //!< Cached projection matrix.
+    mutable vne::math::Mat4f view_projection_matrix_{
+        vne::math::Mat4f::identity()};             //!< Cached projection * view (P*V).
     mutable bool view_matrix_dirty_ = true;        //!< True when view matrix needs recomputation.
     mutable bool projection_matrix_dirty_ = true;  //!< True when projection matrix needs recomputation.
-    mutable bool vp_matrix_dirty_ =
-        true;  //!< True when VP (= projection * view, i.e. P*V) needs recompute (set by view/projection updates, cleared by updateMatrices()).
+    mutable bool vp_matrix_dirty_ = true;  //!< True when VP (= projection * view, i.e. P*V) needs recompute (set by
+                                           //!< view/projection updates, cleared by updateMatrices()).
 };
 
 }  // namespace vne::scene
