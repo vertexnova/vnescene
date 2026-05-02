@@ -31,7 +31,6 @@ constexpr float kMinAspectRatio = 0.1f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
 constexpr float kMinSceneScale = 1e-4f;
-constexpr float kEpsilon = 1e-6f;
 
 }  // namespace
 
