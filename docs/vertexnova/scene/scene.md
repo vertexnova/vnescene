@@ -250,16 +250,23 @@ Data-only struct for environment settings (no GPU textures; application manages 
 
 All implementation files (`*.cpp`) emit structured log messages through `vne::logging` using per-category names. Logging is a **required** CMake dependency (`vne::logging` linked `PUBLIC`); no logging calls are in hot per-frame paths.
 
+The table lists each `CREATE_VNE_LOGGER_CATEGORY(...)` string, the `src/` file(s) that define it, and what is emitted today at each severity—use it to tune filters (for example only `vnescene.spot_light`). Configure sinks / patterns so category names appear in output. Exact message text may change between releases.
+
 **Log Categories:**
 
 | Category | Source File(s) | What is logged |
 |----------|---------------|----------------|
-| `vnescene.camera` | `camera_base.cpp`, `perspective_camera.cpp`, `camera_factory.cpp` | Construction (INFO), degenerate eye==target (WARN), near-zero back vector (WARN), up parallel to look (WARN), FOV clamp (WARN), zero-height resize (WARN), non-positive scene scale (WARN), factory dynamic_cast failure (WARN) |
-| `vnescene.orthographic_camera` | `orthographic_camera.cpp` | Construction (INFO), degenerate `setBounds` inputs (WARN), non-positive scene scale (WARN) |
-| `vnescene.camera.utils` | `camera_utils.cpp` | Zero/negative AABB radius skip (WARN), zero/negative FOV tangent skip (WARN) |
-| `vnescene.scene` | `scene_state.cpp` | Camera set/cleared (INFO), null light ignored (WARN), FIFO light trim count (INFO) |
-| `vnescene.light` | `directional_light.cpp`, `point_light.cpp`, `spot_light.cpp` | Construction (INFO), near-zero direction fallback (WARN) |
-| `vnescene.ambient_light` | `ambient_light.cpp` | Construction (INFO) |
+| `vnescene.camera` | `camera_base.cpp`, `camera_factory.cpp` | **Base:** degenerate eye==target (WARN), near-zero back vector (WARN), up parallel to look (WARN). **Factory:** perspective/orthographic creation via factory (INFO); `dynamic_cast` failure for typed parameters (WARN). |
+| `vnescene.perspective_camera` | `perspective_camera.cpp` | Construction (INFO); FOV clamp (WARN); zero-height `resize` (WARN); non-positive `setSceneScale` clamp (WARN). |
+| `vnescene.orthographic_camera` | `orthographic_camera.cpp` | Construction (INFO); degenerate `setBounds` (WARN); non-positive `setSceneScale` clamp (WARN). |
+| `vnescene.camera.utils` | `camera_utils.cpp` | `fitToAabb`: zero/negative AABB radius skip (WARN); zero/negative FOV tangent skip (WARN). |
+| `vnescene.scene` | `scene_state.cpp` | Active camera set/cleared (INFO); null light ignored (WARN); FIFO trim when light limit exceeded (INFO). |
+| `vnescene.directional_light` | `directional_light.cpp` | Construction (INFO); near-zero direction fallback (WARN). |
+| `vnescene.point_light` | `point_light.cpp` | Construction (INFO). |
+| `vnescene.spot_light` | `spot_light.cpp` | Construction (INFO); near-zero direction fallback (WARN). |
+| `vnescene.ambient_light` | `ambient_light.cpp` | Construction (INFO). |
+
+Example programs under `examples/` use category `vnescene.examples` (`examples/common/logging_guard.h`).
 
 **Usage pattern in library code:**
 
@@ -267,14 +274,14 @@ All implementation files (`*.cpp`) emit structured log messages through `vne::lo
 #include <vertexnova/logging/logging.h>
 
 namespace {
-CREATE_VNE_LOGGER_CATEGORY("vnescene.camera")
+CREATE_VNE_LOGGER_CATEGORY("vnescene.perspective_camera")
 }  // namespace
 
-// construction
-VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg)";
+VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, aspect=" << aspect_ratio_
+             << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 
-// degenerate input
-VNE_LOG_WARN << "CameraBase: eye and target coincide, preserving current orientation";
+VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": resize height=" << height
+             << " <= 0, aspect ratio unchanged";
 ```
 
 ## Usage Examples
