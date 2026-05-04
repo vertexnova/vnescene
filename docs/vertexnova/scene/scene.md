@@ -53,7 +53,7 @@ The module follows a layered architecture with a clear interface/implementation 
 |---------|-------------|
 | `ICamera` | Abstract camera interface; view/projection/VP matrices, quaternion pose, clip planes, resize, `lookAt`, scene scale, GPU pack |
 | `CameraBase` | Protected mixin; stores `orientation_` (Quatf camera-to-world), `position_`, `look_distance_`, `up_hint_`; implements dirty-flag lazy evaluation |
-| `PerspectiveCamera` | Perspective projection; FOV, aspect ratio or explicit width×height, movement helpers (`moveForward`, `moveRight`, `moveUp`, `orbit`) |
+| `PerspectiveCamera` | Perspective projection; FOV, aspect ratio or explicit width×height; translation helpers (`moveForward`, `moveRight`, `moveUp`) |
 | `OrthographicCamera` | Orthographic projection; explicit LRTB bounds or width×height form; `setBounds`, `resize`, `getAspectRatio` |
 | `CameraFactory` | Static factory; `createPerspective` / `createOrthographic` from typed or base `CameraParameters` |
 | `ILight` | Abstract light interface; color, intensity, position/direction, enabled flag, `toGpu`, `update` |
@@ -119,7 +119,7 @@ Perspective camera with FOV-based projection.
 - `getAspectRatio()`: width / height
 - `getWidth()` / `getHeight()`: stored viewport dimensions (set via `resize`)
 - `moveForward(delta)` / `moveRight(delta)` / `moveUp(delta)`: position translation along camera axes
-- `orbit(yaw_deg, pitch_deg)`: rotate around target while maintaining look distance
+- Orbital inspection (yaw/pitch around a pivot while preserving look distance) is not a dedicated API; compose `lookAt`, `setOrientationView`, `getTarget()`, and quaternion helpers from vnemath in application code.
 
 #### `OrthographicCamera`
 
