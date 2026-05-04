@@ -165,10 +165,19 @@ Mat4f OrthographicCamera::getViewProjectionMatrix() const noexcept {
 }
 
 void OrthographicCamera::updateMatrices() noexcept {
-    updateViewMatrixImpl();
-    updateProjectionMatrixImpl();
-    view_projection_matrix_ = projection_matrix_ * view_matrix_;
-    vp_matrix_dirty_ = false;
+    const bool need_view = view_matrix_dirty_;
+    const bool need_projection = projection_matrix_dirty_;
+    const bool need_vp_product = vp_matrix_dirty_;
+    if (need_view) {
+        updateViewMatrixImpl();
+    }
+    if (need_projection) {
+        updateProjectionMatrixImpl();
+    }
+    if (need_view || need_projection || need_vp_product) {
+        view_projection_matrix_ = projection_matrix_ * view_matrix_;
+        vp_matrix_dirty_ = false;
+    }
 }
 
 bool OrthographicCamera::isActive() const noexcept {
