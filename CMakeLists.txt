@@ -126,11 +126,15 @@ endfunction()
 _vnescene_configure_vnecommon_dep()
 
 function(_vnescene_configure_vnelogging_dep)
-    # When vnescene is shared, use libvnelogging.so: a non-PIC static libvnelogging.a
-    # linked into libvnescene.so fails on Linux (see VNE_SCENE_LIB_TYPE_FOR_DEPS).
+    # Align internal deps with vnescene: shared vnescene needs shared vnelogging on Linux
+    # (non-PIC static .a into .so fails); static vnescene (e.g. iOS) must avoid shared
+    # intermediates or Xcode requires signing for each dylib target.
     if(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
         set(VNE_LOGGING_LIB_TYPE "shared" CACHE STRING
             "VneLogging library type (vnescene sets shared when VNE_SCENE_LIB_TYPE is shared)" FORCE)
+    elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "static")
+        set(VNE_LOGGING_LIB_TYPE "static" CACHE STRING
+            "VneLogging library type (vnescene sets static when VNE_SCENE_LIB_TYPE is static)" FORCE)
     endif()
     get_property(_vs_build_tests_ty CACHE BUILD_TESTS PROPERTY TYPE)
     if(NOT _vs_build_tests_ty STREQUAL "NOTFOUND" AND _vs_build_tests_ty)
@@ -159,9 +163,13 @@ _vnescene_configure_vnelogging_dep()
 
 function(_vnescene_configure_vnemath_dep)
     set(VNE_MATH_TESTS OFF CACHE BOOL "Build vnemath test suite (OFF when used as dep of vnescene)" FORCE)
+    # VneMath defaults to shared; force static when vnescene is static (see vnelogging above).
     if(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
         set(VNE_MATH_LIB_TYPE "shared" CACHE STRING
             "VneMath library type (vnescene sets shared when VNE_SCENE_LIB_TYPE is shared)" FORCE)
+    elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "static")
+        set(VNE_MATH_LIB_TYPE "static" CACHE STRING
+            "VneMath library type (vnescene sets static when VNE_SCENE_LIB_TYPE is static)" FORCE)
     endif()
     get_property(_vs_build_tests_ty CACHE BUILD_TESTS PROPERTY TYPE)
     if(NOT _vs_build_tests_ty STREQUAL "NOTFOUND" AND _vs_build_tests_ty)
@@ -212,8 +220,8 @@ include_directories(${CMAKE_BINARY_DIR})
 # - Use VNE_SCENE_* for vnescene-only options so there is no conflict when
 #   this project is used as a submodule (parent can set VNE_SCENE_TESTS=OFF
 #   without affecting BUILD_TESTS used by other deps).
-# - When VNE_SCENE_LIB_TYPE is shared, vnescene forces VNE_LOGGING_LIB_TYPE and
-#   VNE_MATH_LIB_TYPE to shared before deps (see VNE_SCENE_LIB_TYPE_FOR_DEPS).
+# - When VNE_SCENE_LIB_TYPE is shared/static, vnescene forces VNE_LOGGING_LIB_TYPE and
+#   VNE_MATH_LIB_TYPE to match before deps (see VNE_SCENE_LIB_TYPE_FOR_DEPS).
 # - BUILD_TESTS / BUILD_EXAMPLES are global; we force them (via VneUseDep
 #   CACHE_VARS) before add_subdirectory for each dep so deps do not build their
 #   own tests/examples when used as internal libs. We restore after each dep.
