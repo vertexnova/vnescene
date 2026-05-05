@@ -248,7 +248,6 @@ jobs:
             -DVNE_SCENE_CI=ON \
             -DVNE_SCENE_LIB_TYPE=static \
             -DVNE_SCENE_TESTS=OFF \
-            -DVNE_SCENE_STANDALONE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
