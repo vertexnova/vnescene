@@ -73,7 +73,7 @@ The module follows a layered architecture with a clear interface/implementation 
 
 #### `ICamera`
 
-Abstract base class defining the full camera interface. All operations are `noexcept`; degenerate inputs (zero vectors, coincident eye/target, out-of-range values) are handled by silent graceful fallbacks in the implementations.
+Abstract base class defining the full camera interface. All operations are `noexcept`; degenerate inputs (zero vectors, coincident eye/target, out-of-range values) are handled by graceful fallbacks with diagnostic warnings where appropriate in the implementations.
 
 **Key Methods:**
 
