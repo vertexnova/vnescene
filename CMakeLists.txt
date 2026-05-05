@@ -420,17 +420,7 @@ install(FILES cmake/FindVneScene.cmake
     COMPONENT vnescene
 )
 
-# Root metadata (optional; included in release tarballs)
-if(EXISTS "${PROJECT_SOURCE_DIR}/LICENSE")
-    install(FILES "${PROJECT_SOURCE_DIR}/LICENSE" DESTINATION .
-        COMPONENT vnescene)
-endif()
-if(EXISTS "${PROJECT_SOURCE_DIR}/CHANGELOG.md")
-    install(FILES "${PROJECT_SOURCE_DIR}/CHANGELOG.md" DESTINATION .
-        COMPONENT vnescene)
-endif()
-
-# Root metadata (release tarballs / local prefix)
+# Root metadata (optional; release tarballs / local prefix install)
 if(EXISTS "${PROJECT_SOURCE_DIR}/LICENSE")
     install(FILES "${PROJECT_SOURCE_DIR}/LICENSE" DESTINATION .
         COMPONENT vnescene)
