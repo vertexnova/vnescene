@@ -97,10 +97,10 @@ TEST(OrthographicCameraTest, SetBounds_UpdatesAllFrustumPlanes) {
 // setNearPlane / setFarPlane / setClipPlanes (min constraints)
 //==============================================================================
 
-TEST(OrthographicCameraTest, SetNearPlane_EnforcesMinimum) {
+TEST(OrthographicCameraTest, SetNearPlane_AllowsNegativeValues) {
     OrthographicCamera cam = makeOrtho();
-    cam.setNearPlane(0.0001f);
-    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    cam.setNearPlane(-100.0f);
+    EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
 }
 
 TEST(OrthographicCameraTest, SetFarPlane_EnforcesOffsetFromNear) {
@@ -110,10 +110,10 @@ TEST(OrthographicCameraTest, SetFarPlane_EnforcesOffsetFromNear) {
     EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
 }
 
-TEST(OrthographicCameraTest, SetClipPlanes_AppliesBothConstraints) {
+TEST(OrthographicCameraTest, SetClipPlanes_AllowsNegativeNearAndEnforcesFarOffset) {
     OrthographicCamera cam = makeOrtho();
-    cam.setClipPlanes(0.0001f, 0.05f);
-    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    cam.setClipPlanes(-100.0f, -50.0f);
+    EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
     EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
 }
 
@@ -206,11 +206,10 @@ TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
 // setBounds edge cases
 //==============================================================================
 
-TEST(OrthographicCameraTest, SetBounds_ClampsNearAndFarLikeSetters) {
+TEST(OrthographicCameraTest, SetBounds_AllowsNegativeNearAndEnforcesFarOffset) {
     OrthographicCamera cam = makeOrtho();
-    // near < kMinNearPlane and far < near + kMinFarPlaneOffset
-    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 0.0f);
-    EXPECT_GE(cam.getNearPlane(), 0.001f);
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, -100.0f, -50.0f);
+    EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
     EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
 }
 
