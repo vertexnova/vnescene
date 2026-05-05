@@ -67,7 +67,7 @@ class VNE_SCENE_API ICamera {
     [[nodiscard]] virtual vne::math::Mat4f getProjectionMatrix() const noexcept = 0;
     /** @brief Recompute projection matrix (e.g. after FOV or bounds change). */
     virtual void updateProjectionMatrix() noexcept = 0;
-    /** @brief Get view * projection matrix. */
+    /** @brief Get projection * view matrix (VP / clip-from-world; same product as @c proj * @c view). */
     [[nodiscard]] virtual vne::math::Mat4f getViewProjectionMatrix() const noexcept = 0;
     /** @brief Recompute both view and projection matrices. */
     virtual void updateMatrices() noexcept = 0;

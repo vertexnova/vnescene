@@ -67,7 +67,7 @@ static_assert(
  * @brief Build CameraGpu from precomputed matrices and parameters (shared by all camera types).
  * @param view View matrix.
  * @param proj Projection matrix.
- * @param view_proj View * projection matrix.
+ * @param view_proj Projection * view matrix (VP / clip-from-world; same product as @c proj * @c view).
  * @param position Camera position (xyz).
  * @param near_plane Near clip plane.
  * @param far_plane Far clip plane.

@@ -1,0 +1,57 @@
+<mxfile host="65bd71144e">
+    <diagram name="System Context (C4 Level 1)" id="scene_context">
+        <mxGraphModel dx="950" dy="668" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="C++ Application&#xa;(Developer / User Code)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565c0;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#0d47a1;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="200" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="VneScene&#xa;Scene Library" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=3;fontStyle=1;fontSize=15;fontColor=#bf360c;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="350" width="220" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="GPU / Renderer&#xa;(consumes CameraGpu, LightGpu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;strokeWidth=2;fontSize=11;fontColor=#4a148c;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="490" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="vnemath&#xa;(Mat4f, Vec3f, Quatf, Ray, GraphicsApi)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;fontSize=11;fontColor=#1b5e20;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="500" width="290" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="vnelogging&#xa;(VNE_LOG_*, CREATE_VNE_LOGGER_CATEGORY)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#0288d1;strokeWidth=2;fontSize=11;fontColor=#01579b;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="560" width="270" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#1565c0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2" target="3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="creates cameras &amp; lights&#xa;ICamera, ILight, SceneState" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#0d47a1;backgroundColor=#ffffff;" parent="7" connectable="0" vertex="1">
+                    <mxGeometry x="-0.15" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#6a1b9a;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="3" target="4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="provides packed structs&#xa;CameraGpu, LightGpu" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#4a148c;backgroundColor=#ffffff;" parent="9" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="11" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#2e7d32;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="3" target="5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="depends on (required)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#1b5e20;backgroundColor=#ffffff;" parent="11" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#0288d1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="3" target="6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="logs lifecycle &amp; warnings" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#01579b;backgroundColor=#ffffff;" parent="13" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

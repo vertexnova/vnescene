@@ -10,6 +10,7 @@
  */
 
 #include "vertexnova/scene/light/spot_light.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/constants.h>
 #include <vertexnova/math/core/core.h>
 #include <algorithm>
@@ -19,9 +20,14 @@ namespace vne::scene {
 
 using namespace vne::math;
 
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.spot_light");
+}  // namespace
+
 static Vec3f normalizeSafe(const Vec3f& v) noexcept {
     float len = v.length();
     if (len <= kFloatEpsilon) {
+        VNE_LOG_WARN << "SpotLight: near-zero direction vector, falling back to (0,-1,0)";
         return {0.0f, -1.0f, 0.0f};
     }
     return v / len;
@@ -56,7 +62,10 @@ SpotLight::SpotLight(const Vec3f& position,
     , inner_angle_deg_(clampDeg(inner_angle_deg))
     , outer_angle_deg_(clampDeg(std::max(inner_angle_deg, outer_angle_deg)))
     , name_(std::move(name))
-    , enabled_(true) {}
+    , enabled_(true) {
+    VNE_LOG_INFO << "SpotLight \"" << name_ << "\" created (range=" << range_ << ", inner=" << inner_angle_deg_
+                 << "deg, outer=" << outer_angle_deg_ << "deg)";
+}
 
 void SpotLight::setIntensity(float intensity) noexcept {
     intensity_ = std::max(0.0f, intensity);

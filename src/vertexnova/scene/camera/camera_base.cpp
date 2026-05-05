@@ -1,10 +1,16 @@
 /* ---------------------------------------------------------------------
  * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   February 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
  */
 
 #include "vertexnova/scene/camera/camera_base.h"
+#include <vertexnova/logging/logging.h>
 
 namespace vne::scene {
 
@@ -17,6 +23,7 @@ using vne::math::Vec4f;
 namespace {
 
 constexpr float kEps = 1e-6f;
+CREATE_VNE_LOGGER_CATEGORY("vnescene.camera");
 
 }  // namespace
 
@@ -28,6 +35,7 @@ std::pair<Vec3f, float> CameraBase::resolveBackUnitAndLookDistance(const Vec3f& 
     if (d > kEps) {
         return {back / d, d};
     }
+    VNE_LOG_WARN << "CameraBase: eye and target coincide, preserving current orientation as look direction";
     back = orientation_fallback.getZAxis();
     const float bl = back.length();
     if (bl < kEps) {
@@ -41,6 +49,7 @@ std::pair<Vec3f, float> CameraBase::resolveBackUnitAndLookDistance(const Vec3f& 
 Quatf CameraBase::orientationFromPosBack(Vec3f back, Vec3f up_hint, const Vec3f& fallback_up) noexcept {
     float bl = back.length();
     if (bl < kEps) {
+        VNE_LOG_WARN << "CameraBase: degenerate back vector, falling back to +Z";
         back = Vec3f(0.0f, 0.0f, 1.0f);
     } else {
         back /= bl;
@@ -72,6 +81,7 @@ Quatf CameraBase::orientationFromPosBack(Vec3f back, Vec3f up_hint, const Vec3f&
         rl = right.length();
     }
     if (rl < kEps) {
+        VNE_LOG_WARN << "CameraBase: up vector parallel to look direction, falling back to +X right";
         right = Vec3f(1.0f, 0.0f, 0.0f);
     } else {
         right /= rl;

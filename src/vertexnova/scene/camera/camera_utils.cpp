@@ -11,6 +11,7 @@
 
 #include "vertexnova/scene/camera/camera_utils.h"
 #include "vertexnova/scene/camera/perspective_camera.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/core.h>
 #include <vertexnova/math/core/types.h>
 #include <algorithm>
@@ -24,6 +25,8 @@ namespace {
 
 constexpr float kHalfFovFactor = 0.5f;
 
+CREATE_VNE_LOGGER_CATEGORY("vnescene.camera.utils")
+
 }  // namespace
 
 void fitToAabb(PerspectiveCamera& cam, const Aabb& aabb, float padding) noexcept {
@@ -31,12 +34,14 @@ void fitToAabb(PerspectiveCamera& cam, const Aabb& aabb, float padding) noexcept
     Vec3f half = aabb.halfExtents();
     float radius = half.length();
     if (radius <= 0.0f) {
+        VNE_LOG_WARN << "fitToAabb: AABB has zero or negative radius, skipping";
         return;
     }
 
     float v_fov_rad = degToRad(cam.getFieldOfView());
     float tan_half = std::tan(v_fov_rad * kHalfFovFactor);
     if (tan_half <= 0.0f) {
+        VNE_LOG_WARN << "fitToAabb: zero or negative FOV tangent (fov=" << cam.getFieldOfView() << "deg), skipping";
         return;
     }
 

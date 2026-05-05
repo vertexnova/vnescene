@@ -27,8 +27,7 @@ namespace vne::scene {
  * @class PerspectiveCamera
  * @brief Perspective camera with FOV and aspect ratio.
  *
- * Supports viewport resize, lookAt, and orbit-style rotation around target
- * (rotateAroundTarget). Forward/right/up helpers for first-person style movement.
+ * Supports viewport resize, lookAt, and forward/right/up movement helpers.
  * Inherits shared state from CameraBase.
  */
 class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
@@ -68,11 +67,7 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     [[nodiscard]] vne::math::Vec3f getTarget() const noexcept override;
     /** @brief Set look-at target (recomputes orientation and look distance). */
     void setTarget(const vne::math::Vec3f& target) noexcept override;
-    /**
-     * @brief Stored up hint used to reconstruct orientation with @c orientationFromPosBack (same path as
-     * @c lookAtImpl / @c setOrientationViewImpl). It is intentionally mutable during orbit: @c rotateAroundTarget
-     * updates it like a trackball so @c getUp reflects the evolved frame (see @c TrackballStrategy::syncFromCamera).
-     */
+    /** @brief Stored up hint used to reconstruct orientation (see @c orientationFromPosBack). */
     [[nodiscard]] vne::math::Vec3f getUp() const noexcept override;
     /** @brief Set up hint and re-derive orientation for the current view direction. */
     void setUp(const vne::math::Vec3f& up) noexcept override;
@@ -91,7 +86,7 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     [[nodiscard]] vne::math::Mat4f getProjectionMatrix() const noexcept override;
     /** @brief Recompute projection matrix from FOV and aspect. */
     void updateProjectionMatrix() noexcept override;
-    /** @brief Get view * projection matrix. */
+    /** @brief Get projection * view matrix (VP / clip-from-world; same product as @c proj * @c view). */
     [[nodiscard]] vne::math::Mat4f getViewProjectionMatrix() const noexcept override;
     /** @brief Recompute view and projection matrices. */
     void updateMatrices() noexcept override;
@@ -165,13 +160,6 @@ class VNE_SCENE_API PerspectiveCamera : public ICamera, protected CameraBase {
     void moveRight(float distance) noexcept;
     /** @brief Move camera along up by distance. */
     void moveUp(float distance) noexcept;
-    /**
-     * @brief Orbit around current target by yaw and pitch (degrees); trackball-style update of @c up_hint_.
-     *
-     * Mutates @c up_hint_ so the reconstructed orientation via @c orientationFromPosBack stays consistent
-     * with @c lookAtImpl / @c setOrientationViewImpl; @c getUp() reflects the evolved hint.
-     */
-    void rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept;
 
    private:
     /** @brief Non-virtual implementation to avoid virtual call during construction. */

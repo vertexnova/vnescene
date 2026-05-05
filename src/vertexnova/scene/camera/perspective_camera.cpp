@@ -11,6 +11,7 @@
 
 #include "vertexnova/scene/camera/perspective_camera.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/core.h>
 #include <vertexnova/math/projection_utils.h>
 
@@ -22,13 +23,14 @@ using namespace vne::math;
 
 namespace {
 
+CREATE_VNE_LOGGER_CATEGORY("vnescene.perspective_camera");
+
 constexpr float kMinFovDeg = 1.0f;
 constexpr float kMaxFovDeg = 179.0f;
 constexpr float kMinAspectRatio = 0.1f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
 constexpr float kMinSceneScale = 1e-4f;
-constexpr float kEpsilon = 1e-6f;
 
 }  // namespace
 
@@ -41,6 +43,9 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect_ratio, float near_p
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, aspect=" << aspect_ratio_
+                 << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 PerspectiveCamera::PerspectiveCamera(
@@ -55,6 +60,9 @@ PerspectiveCamera::PerspectiveCamera(
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "PerspectiveCamera \"" << name_ << "\" created (fov=" << fov_ << "deg, " << width_ << "x" << height_
+                 << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 Vec3f PerspectiveCamera::getPosition() const noexcept {
@@ -88,7 +96,10 @@ Quatf PerspectiveCamera::getOrientation() const noexcept {
 
 void PerspectiveCamera::setOrientationView(const Vec3f& position, const Quatf& orientation) noexcept {
     setOrientationViewImpl(position, orientation);
-    updateMatrices();
+    // Only view changed — skip projection recompute (called every frame by Navigation3D).
+    updateViewMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 Vec3f PerspectiveCamera::getForwardDir() const noexcept {
@@ -113,6 +124,7 @@ Mat4f PerspectiveCamera::getViewMatrix() const noexcept {
 void PerspectiveCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = viewFromQuaternion(graphics_api_, scene_scale_);
     view_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::updateViewMatrix() noexcept {
@@ -130,6 +142,7 @@ void PerspectiveCamera::updateProjectionMatrixImpl() noexcept {
     float fov_rad = degToRad(fov_);
     projection_matrix_ = Mat4f::perspective(fov_rad, aspect_ratio_, near_plane_, far_plane_, graphics_api_);
     projection_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void PerspectiveCamera::updateProjectionMatrix() noexcept {
@@ -145,16 +158,26 @@ void PerspectiveCamera::setGraphicsApi(GraphicsApi api) noexcept {
 }
 
 Mat4f PerspectiveCamera::getViewProjectionMatrix() const noexcept {
-    if (view_matrix_dirty_ || projection_matrix_dirty_) {
+    if (view_matrix_dirty_ || projection_matrix_dirty_ || vp_matrix_dirty_) {
         const_cast<PerspectiveCamera*>(this)->updateMatrices();
     }
     return view_projection_matrix_;
 }
 
 void PerspectiveCamera::updateMatrices() noexcept {
-    updateViewMatrixImpl();
-    updateProjectionMatrixImpl();
-    view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    const bool need_view = view_matrix_dirty_;
+    const bool need_projection = projection_matrix_dirty_;
+    const bool need_vp_product = vp_matrix_dirty_;
+    if (need_view) {
+        updateViewMatrixImpl();
+    }
+    if (need_projection) {
+        updateProjectionMatrixImpl();
+    }
+    if (need_view || need_projection || need_vp_product) {
+        view_projection_matrix_ = projection_matrix_ * view_matrix_;
+        vp_matrix_dirty_ = false;
+    }
 }
 
 bool PerspectiveCamera::isActive() const noexcept {
@@ -174,6 +197,10 @@ void PerspectiveCamera::setName(const std::string& name) noexcept {
 }
 
 void PerspectiveCamera::setFieldOfView(float fov) noexcept {
+    if (fov < kMinFovDeg || fov > kMaxFovDeg) {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": FOV " << fov << " clamped to [" << kMinFovDeg << ", "
+                     << kMaxFovDeg << "]";
+    }
     fov_ = std::clamp(fov, kMinFovDeg, kMaxFovDeg);
     projection_matrix_dirty_ = true;
 }
@@ -215,6 +242,9 @@ void PerspectiveCamera::resize(float width, float height) noexcept {
     height_ = height;
     if (height > 0.0f) {
         aspect_ratio_ = width / height;
+    } else {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": resize height=" << height
+                     << " <= 0, aspect ratio unchanged";
     }
     projection_matrix_dirty_ = true;
 }
@@ -228,6 +258,10 @@ void PerspectiveCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 }
 
 void PerspectiveCamera::setSceneScale(float scale) noexcept {
+    if (scale <= 0.0f) {
+        VNE_LOG_WARN << "PerspectiveCamera \"" << name_ << "\": setSceneScale(" << scale << ") <= 0, clamped to "
+                     << kMinSceneScale;
+    }
     // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
     scene_scale_ = std::max(kMinSceneScale, scale);
     view_matrix_dirty_ = true;
@@ -257,24 +291,6 @@ void PerspectiveCamera::moveRight(float distance) noexcept {
 
 void PerspectiveCamera::moveUp(float distance) noexcept {
     position_ = position_ + upDirImpl() * distance;
-    view_matrix_dirty_ = true;
-}
-
-// Trackball orbit: up_hint_ evolves with the pitch axis so orientationFromPosBack matches the rotated frame
-// (same up_hint_ role as lookAtImpl / setOrientationViewImpl; TrackballStrategy::syncFromCamera reads this state).
-void PerspectiveCamera::rotateAroundTarget(float yaw_angle, float pitch_angle) noexcept {
-    const Vec3f coi = targetImpl();
-    Vec3f back = orientation_.getZAxis();
-    const Quatf yaw = Quatf::fromAxisAngle(up_hint_, degToRad(yaw_angle));
-    back = yaw.rotate(back);
-    Vec3f right = back.cross(up_hint_);
-    float rl = right.length();
-    right = (rl < kEpsilon) ? Vec3f(1.0f, 0.0f, 0.0f) : right / rl;
-    const Quatf pitch = Quatf::fromAxisAngle(right, degToRad(pitch_angle));
-    back = pitch.rotate(back).normalized();
-    up_hint_ = pitch.rotate(up_hint_).normalized();
-    position_ = coi + back * look_distance_;
-    orientation_ = orientationFromPosBack(back, up_hint_, Vec3f(0.0f, 1.0f, 0.0f));
     view_matrix_dirty_ = true;
 }
 

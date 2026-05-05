@@ -84,6 +84,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Select Xcode 26 (macOS)
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
       # ------------------------------------------------------------------
       # Single effective build type: always inputs.build_type (CI runs Release only).
       # Coverage uses Release + --coverage; cache key adds -coverage when enabled.
@@ -113,7 +119,8 @@ jobs:
               exit 1
           fi
           echo "CACHE_LIB_TYPE=$EFFECTIVE_LIB_TYPE" >> "$GITHUB_ENV"
-          echo "BUILD_DIR=build/$EFFECTIVE_LIB_TYPE" >> "$GITHUB_ENV"
+          # Match vneio: build/<shared|static>/<Release|Debug>/ isolates cache per config.
+          echo "BUILD_DIR=build/$EFFECTIVE_LIB_TYPE/$BUILD_TYPE" >> "$GITHUB_ENV"
 
       # Skip cache for coverage: we clean build/ right after to force instrumented rebuild,
       # so restore would be discarded and would waste time/bandwidth.
@@ -154,6 +161,7 @@ jobs:
           CPP_COMPILER:    ${{ inputs.cpp_compiler }}
           EXTRA_FLAGS:     ${{ inputs.extra_cmake_flags }}
           WAE:             ${{ inputs.warnings_as_errors && 'ON' || 'OFF' }}
+          PLATFORM_ID:     ${{ inputs.platform }}
         run: |
           COVERAGE_FLAG=""
           if [[ "$ENABLE_COVERAGE" == "true" ]]; then
@@ -173,6 +181,11 @@ jobs:
               LIB_TYPE_FLAGS="-DVNE_SCENE_LIB_TYPE=shared"
           fi
 
+          IPO_OFF=""
+          if [[ "$PLATFORM_ID" == "linux-clang" || "$PLATFORM_ID" == "linux-asan" ]]; then
+              IPO_OFF="-DENABLE_IPO=OFF"
+          fi
+
           # shellcheck disable=SC2086  # intentional word-splitting for flag vars
           cmake -B "$BUILD_DIR" -S . \
             -DCMAKE_BUILD_TYPE="$EFFECTIVE_BUILD_TYPE" \
@@ -182,6 +195,7 @@ jobs:
             ${COVERAGE_FLAG} \
             ${LIB_TYPE_FLAGS} \
             ${COMPILER_FLAGS} \
+            ${IPO_OFF} \
             ${EXTRA_FLAGS}
 
       - name: Build

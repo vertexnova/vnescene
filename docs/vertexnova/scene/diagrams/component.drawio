@@ -1,0 +1,141 @@
+<mxfile host="65bd71144e">
+    <diagram name="VneScene Component Diagram" id="scene_component">
+        <mxGraphModel dx="1847" dy="954" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1050" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Application" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1565c0;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#0d47a1;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="70" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="GPU / Renderer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#4a148c;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="670" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="vnemath&#xa;(Mat4f, Vec3f, Quatf, Ray)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;fontSize=11;fontColor=#1b5e20;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="480" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" style="edgeStyle=none;html=1;dashed=1;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" edge="1" parent="1" source="5">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="990" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="5" value="vnelogging&#xa;(VNE_LOG_*, categories)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#0288d1;strokeWidth=2;fontSize=11;fontColor=#01579b;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="480" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="Camera Module" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;fontSize=13;fontColor=#0d47a1;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="240" width="220" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="ICamera  «interface»&#xa;CameraBase  «abstract»&#xa;PerspectiveCamera&#xa;OrthographicCamera&#xa;CameraFactory&#xa;camera_utils.h&#xa;camera_transform_adapter.h" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;fontColor=#0d47a1;" parent="10" vertex="1">
+                    <mxGeometry x="10" y="35" width="190" height="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="Light Module" style="swimlane;startSize=30;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;fontStyle=1;fontSize=13;fontColor=#bf360c;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="640" width="220" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="ILight  «interface»&#xa;AmbientLight&#xa;DirectionalLight&#xa;PointLight&#xa;SpotLight&#xa;ShadowSettings" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;fontColor=#bf360c;" parent="20" vertex="1">
+                    <mxGeometry y="35" width="180" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="Scene State" style="swimlane;startSize=30;fillColor=#fce4ec;strokeColor=#ad1457;strokeWidth=2;fontStyle=1;fontSize=13;fontColor=#880e4f;" parent="1" vertex="1">
+                    <mxGeometry x="990" y="400" width="250" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="SceneState&#xa;  active ICamera&#xa;  bounded ILight list&#xa;  FIFO trim&#xa;Environment&#xa;  exposure, gamma&#xa;  clear color, HDRI id" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;fontColor=#880e4f;" parent="30" vertex="1">
+                    <mxGeometry x="10" y="35" width="170" height="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="GPU Pack Layer" style="swimlane;startSize=30;fillColor=#e0f7fa;strokeColor=#00838f;strokeWidth=2;fontStyle=1;fontSize=13;fontColor=#006064;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="400" width="190" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="CameraGpu&#xa;  view, proj, VP matrices&#xa;  position, clip, directions&#xa;LightGpu&#xa;  color_intensity, position_range&#xa;  direction_inner_cos, misc" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;fontColor=#006064;" parent="40" vertex="1">
+                    <mxGeometry x="10" y="35" width="180" height="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="Handle" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#616161;strokeWidth=2;fontStyle=1;fontSize=13;fontColor=#212121;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="180" width="220" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="Handle&lt;Tag&gt;  (32-bit slot + gen)&#xa;CameraId&#xa;LightId" style="text;html=0;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fontSize=11;fontColor=#212121;" parent="50" vertex="1">
+                    <mxGeometry x="10" y="35" width="190" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#1565c0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="creates via CameraFactory" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#0d47a1;backgroundColor=#ffffff;" parent="60" connectable="0" vertex="1">
+                    <mxGeometry x="-0.1" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="62" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#1565c0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="2" target="30" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points"/>
+                        <mxPoint x="1190" y="-259.9999999999998" as="sourcePoint"/>
+                        <mxPoint x="1430" y="28" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="63" value="manages SceneState" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#0d47a1;backgroundColor=#ffffff;" parent="62" connectable="0" vertex="1">
+                    <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="64" style="endArrow=open;dashed=1;html=1;strokeWidth=2;strokeColor=#ad1457;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="30" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="holds shared_ptr&lt;ICamera&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#ad1457;backgroundColor=#ffffff;" parent="64" connectable="0" vertex="1">
+                    <mxGeometry x="-0.1" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="66" style="endArrow=open;dashed=1;html=1;strokeWidth=2;strokeColor=#ad1457;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="30" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="67" value="holds vector&lt;shared_ptr&lt;ILight&gt;&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#ad1457;backgroundColor=#ffffff;" parent="66" connectable="0" vertex="1">
+                    <mxGeometry x="-0.1" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="68" style="endArrow=open;dashed=1;html=1;strokeWidth=2;strokeColor=#6c8ebf;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="10" target="41" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="140" y="344" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="69" value="packs CameraGpu&#xa;via toGpu()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#6c8ebf;backgroundColor=#ffffff;" parent="68" connectable="0" vertex="1">
+                    <mxGeometry x="0.1" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="70" style="endArrow=open;dashed=1;html=1;strokeWidth=2;strokeColor=#e65100;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="20" target="40" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="packs LightGpu&#xa;via toGpu()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#e65100;backgroundColor=#ffffff;" parent="70" connectable="0" vertex="1">
+                    <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="72" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#6a1b9a;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="40" target="3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="73" value="app uploads structs" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#4a148c;backgroundColor=#ffffff;" parent="72" connectable="0" vertex="1">
+                    <mxGeometry y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="74" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#2e7d32;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;" parent="1" source="4" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="75" value="required dep" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#1b5e20;backgroundColor=#ffffff;" parent="74" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="76" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#2e7d32;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="4" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="77" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#0288d1;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.7;entryY=1;entryDx=0;entryDy=0;" parent="1" source="5" target="10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="78" value="required dep" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#01579b;backgroundColor=#ffffff;" parent="77" connectable="0" vertex="1">
+                    <mxGeometry x="0.2" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="79" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#0288d1;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="5" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

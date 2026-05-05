@@ -72,38 +72,53 @@ jobs:
 
   # --------------------------------------------------------------------
   # Stage 2: Build and publish artifacts (only when a release was created this run).
-  # Skipped on most pushes — release_created is true only when the Release PR
-  # was merged in this run (release-please then creates the tag + GitHub Release).
-  #
-  # Produces 3 tarballs per release (Release build only):
-  #   vnescene-vX.Y.Z-{platform}.tar.gz
-  #
-  # Contents: one library per build in lib/ (static or shared via VNE_SCENE_LIB_TYPE;
-  #           e.g. libvnescene.so or libvnescene.a on Unix), include/vertexnova/scene/
+  # Aligns with vneio: same platform matrix, build/shared/Release (static iOS in
+  # build/static/Release), full `cmake --install` (no --component) so dependency
+  # shared libraries (vnemath, vnelogging, vnecommon) and LICENSE/CHANGELOG.md land
+  # in the tarball (see root install rules in CMakeLists.txt).
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
     needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
     permissions:
-      contents: write   # upload release assets
+      contents: write
 
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: linux-gcc
-            runner:   ubuntu-latest
-            c:        gcc
-            cpp:      g++
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: gcc
+            cpp: g++
           - platform: macos
-            runner:   macos-latest
-            c:        ""
-            cpp:      ""
+            runner: macos-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
           - platform: windows
-            runner:   windows-latest
-            c:        ""
-            cpp:      ""
+            runner: windows-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: web-emscripten
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: ios-static
+            runner: macos-latest
+            build_dir: build/static/Release
+            c: ""
+            cpp: ""
+          - platform: android
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+            android_platform: android-24
 
     runs-on: ${{ matrix.runner }}
     steps:
@@ -112,43 +127,196 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          # Check out the exact release tag — not HEAD — so artifacts are
-          # built from the same tree that release-please tagged.
           ref: ${{ needs.release-please.outputs.tag_name }}
           submodules: recursive
 
-      - name: Install Linux build dependencies
-        if: runner.os == 'Linux'
-        run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake
+      - name: Setup Android NDK
+        if: matrix.platform == 'android'
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27d
 
-      - name: Configure CMake
+      - name: Select Xcode 26 (macOS + iOS)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
+      - name: Verify Xcode (iOS release)
+        if: matrix.platform == 'ios-static'
         shell: bash
         run: |
+          set -euo pipefail
+          xcodebuild -version
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux-gcc'
+        run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake
+
+      - name: Install Emscripten
+        if: matrix.platform == 'web-emscripten'
+        uses: mymindstorm/setup-emscripten@v14
+
+      - name: Configure CMake (Linux / macOS / Windows desktop)
+        if: matrix.platform != 'web-emscripten' && matrix.platform != 'ios-static' && matrix.platform != 'android'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          set -e
           COMPILER_FLAGS=""
           if [[ -n "${{ matrix.c }}" ]]; then
             COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
           fi
-          cmake -B build/shared -S . \
+          BUILD_DIR="${{ matrix.build_dir }}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cmake -B "$BUILD_DIR" -S . -G "Visual Studio 17 2022" -A x64 \
+              -DVNE_SCENE_CI=ON \
+              -DVNE_SCENE_LIB_TYPE=shared \
+              -DVNE_SCENE_TESTS=OFF \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+              $COMPILER_FLAGS
+          else
+            cmake -B "$BUILD_DIR" -S . \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DVNE_SCENE_CI=ON \
+              -DVNE_SCENE_LIB_TYPE=shared \
+              -DVNE_SCENE_TESTS=OFF \
+              -DENABLE_IPO=OFF \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+              $COMPILER_FLAGS
+          fi
+
+      - name: Configure CMake (Android)
+        if: matrix.platform == 'android'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          set -euo pipefail
+          NDK="${ANDROID_NDK_ROOT}"
+          if [[ -z "$NDK" || ! -f "$NDK/build/cmake/android.toolchain.cmake" ]]; then
+            echo "::error::Android NDK path invalid (ANDROID_NDK_ROOT=${NDK:-empty})"
+            exit 1
+          fi
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=${{ matrix.android_platform }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DVNE_SCENE_CI=ON \
             -DVNE_SCENE_LIB_TYPE=shared \
-            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
-            $COMPILER_FLAGS
+            -DVNE_SCENE_TESTS=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
+      - name: Configure CMake (Emscripten)
+        if: matrix.platform == 'web-emscripten'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNE_SCENE_CI=ON \
+            -DVNE_SCENE_LIB_TYPE=shared \
+            -DVNE_SCENE_TESTS=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
+      - name: Configure CMake (iOS)
+        if: matrix.platform == 'ios-static'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          set -euxo pipefail
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
+            -DVNE_SCENE_CI=ON \
+            -DVNE_SCENE_LIB_TYPE=static \
+            -DVNE_SCENE_TESTS=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
       - name: Build
         shell: bash
-        run: cmake --build build/shared --config Release --parallel
+        run: |
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            cmake --build "$BDIR" --config Release --parallel --verbose
+          else
+            cmake --build "$BDIR" --config Release --parallel
+          fi
 
       - name: Install to staging directory
         shell: bash
-        run: cmake --install build/shared --config Release --component vnescene
+        run: |
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          WS="${{ github.workspace }}"
+          # Full install (all components): vnescene plus bundled deps — shared libs consumers need.
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            cmake --install "$BDIR" --config Release --verbose
+          else
+            cmake --install "$BDIR" --config Release
+          fi
+          INSTALL="$WS/install"
+          if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
+            echo "::error::Expected install/include/vertexnova missing."
+            find "$INSTALL" -type f 2>/dev/null | sort | head -80
+            exit 1
+          fi
+          for f in LICENSE CHANGELOG.md; do
+            if [[ ! -f "$INSTALL/$f" ]]; then
+              echo "::error::Expected install/$f missing."
+              find "$INSTALL" -type f 2>/dev/null | sort | head -80
+              exit 1
+            fi
+          done
+          case "${{ matrix.platform }}" in
+            web-emscripten)
+              if [ -z "$(find "$INSTALL" -type f \( -name '*.wasm' -o -name '*.a' -o -name '*.js' \) -print -quit)" ]; then
+                echo "::error::Web install: expected some of .wasm / .a / .js under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+            ios-static)
+              if [ -z "$(find "$INSTALL" -type f -name '*.a' -print -quit)" ]; then
+                echo "::error::iOS install: expected at least one .a under install/"
+                find "$INSTALL" -type f 2>/dev/null | sort || true
+                exit 1
+              fi
+              ;;
+            *)
+              # Require real shared/import library files — not headers, CMake metadata, or LICENSE.
+              if [ -z "$(find "$INSTALL" -type f \( \
+                  \( -iname '*vnescene*.so' -o -iname '*vnescene*.dylib' -o -iname '*vnescene*.dll' -o -iname '*vnescene*.lib' \) -o \
+                  \( -iname '*vnemath*.so' -o -iname '*vnemath*.dylib' -o -iname '*vnemath*.dll' -o -iname '*vnemath*.lib' \) -o \
+                  \( -iname '*vnelogging*.so' -o -iname '*vnelogging*.dylib' -o -iname '*vnelogging*.dll' -o -iname '*vnelogging*.lib' \) -o \
+                  \( -iname '*vnecommon*.so' -o -iname '*vnecommon*.dylib' -o -iname '*vnecommon*.dll' -o -iname '*vnecommon*.lib' \) \
+                \) -print -quit)" ]; then
+                echo "::error::No vnescene / dependency library binaries (.so/.dylib/.dll/.lib) found under install/ (full install should include shared deps)."
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+          esac
 
       - name: Package artifact
         shell: bash
         run: |
           ARTIFACT="vnescene-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
-          # -C changes into the install dir so tar sees only its contents (no path prefix).
-          # The output path is relative to CWD (repo root) — avoids Windows drive-letter issues.
           tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
 

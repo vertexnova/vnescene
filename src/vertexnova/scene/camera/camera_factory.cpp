@@ -10,8 +10,13 @@
  */
 
 #include "vertexnova/scene/camera/camera_factory.h"
+#include <vertexnova/logging/logging.h>
 
 namespace vne::scene {
+
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vnescene.camera")
+}  // namespace
 
 std::shared_ptr<PerspectiveCamera> CameraFactory::createPerspective(
     const PerspectiveCameraParameters& params) noexcept {
@@ -34,6 +39,7 @@ std::shared_ptr<PerspectiveCamera> CameraFactory::createPerspective(
     camera->setTarget(params.target);
     camera->setUp(params.up);
     camera->updateMatrices();
+    VNE_LOG_INFO << "CameraFactory: PerspectiveCamera \"" << params.name << "\" created";
     return camera;
 }
 
@@ -50,6 +56,7 @@ std::shared_ptr<OrthographicCamera> CameraFactory::createOrthographic(
     camera->setTarget(params.target);
     camera->setUp(params.up);
     camera->updateMatrices();
+    VNE_LOG_INFO << "CameraFactory: OrthographicCamera \"" << params.name << "\" created";
     return camera;
 }
 
@@ -60,6 +67,7 @@ std::shared_ptr<ICamera> CameraFactory::create(const CameraParameters& params) n
             if (p) {
                 return createPerspective(*p);
             }
+            VNE_LOG_WARN << "CameraFactory::create: dynamic_cast to PerspectiveCameraParameters failed, using defaults";
             return createPerspective(PerspectiveCameraParameters{});
         }
         case CameraType::eOrthographic: {
@@ -67,6 +75,8 @@ std::shared_ptr<ICamera> CameraFactory::create(const CameraParameters& params) n
             if (o) {
                 return createOrthographic(*o);
             }
+            VNE_LOG_WARN
+                << "CameraFactory::create: dynamic_cast to OrthographicCameraParameters failed, using defaults";
             return createOrthographic(OrthographicCameraParameters{});
         }
         default:

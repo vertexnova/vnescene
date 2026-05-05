@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
 #include "vertexnova/scene/camera/perspective_camera.h"
+#include "vertexnova/scene/camera/camera_gpu.h"
 #include <vertexnova/math/core/core.h>
 
 using namespace vne::scene;
@@ -190,20 +191,6 @@ TEST(PerspectiveCameraTest, MoveUp_TranslatesPositionDerivedTargetFollows) {
     EXPECT_NEAR(cam.getTarget().y(), 2.0f, kTol);
 }
 
-TEST(PerspectiveCameraTest, RotateAroundTarget_ChangesPositionNotTarget) {
-    PerspectiveCamera cam = makePerspective();
-    cam.setPosition(Vec3f(0.0f, 0.0f, 5.0f));
-    cam.setTarget(Vec3f(0.0f, 0.0f, 0.0f));
-    Vec3f target_before = cam.getTarget();
-    cam.rotateAroundTarget(90.0f, 0.0f);
-    EXPECT_NEAR(cam.getTarget().x(), target_before.x(), kTol);
-    EXPECT_NEAR(cam.getTarget().y(), target_before.y(), kTol);
-    EXPECT_NEAR(cam.getTarget().z(), target_before.z(), kTol);
-    float dist_before = (Vec3f(0.0f, 0.0f, 5.0f) - Vec3f(0.0f, 0.0f, 0.0f)).length();
-    float dist_after = (cam.getPosition() - cam.getTarget()).length();
-    EXPECT_NEAR(dist_after, dist_before, kTol);
-}
-
 //==============================================================================
 // Scene-scale (class-specific: view matrix reflects scale)
 //==============================================================================
@@ -286,4 +273,57 @@ TEST(PerspectiveCameraTest, SetSceneScale_NegativeIsClamped) {
     PerspectiveCamera cam = makePerspective();
     cam.setSceneScale(-5.0f);
     EXPECT_GE(cam.getSceneScale(), 1e-4f);
+}
+
+// After calling getViewMatrix() and getProjectionMatrix() individually, the next
+// getViewProjectionMatrix() must return P*V using the freshly recomputed matrices,
+// not a stale product from before the individual matrix updates.
+TEST(PerspectiveCameraTest, ViewProjectionMatrix_ConsistentAfterSeparateGetters) {
+    PerspectiveCamera cam(60.0f, 1280.0f, 720.0f, 0.1f, 1000.0f);
+    cam.lookAt(Vec3f(3.0f, 2.0f, 5.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+
+    // Trigger individual matrix recomputes without touching VP.
+    Mat4f view = cam.getViewMatrix();
+    Mat4f proj = cam.getProjectionMatrix();
+
+    // VP must equal P * V (not a stale product from the previous state).
+    Mat4f vp = cam.getViewProjectionMatrix();
+    Mat4f expected = proj * view;
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        for (std::size_t r = 0; r < 4; ++r) {
+            EXPECT_NEAR(vp[c][r], expected[c][r], kTol)
+                << "VP[" << c << "][" << r << "] mismatch after separate getter calls";
+        }
+    }
+}
+
+// toGpu must return a (view, proj, vp) triplet where vp == proj * view.
+TEST(PerspectiveCameraTest, ToGpu_ViewProjectionMatchesProductOfViewAndProjection) {
+    PerspectiveCamera cam(45.0f, 1920.0f, 1080.0f, 0.1f, 500.0f);
+    cam.lookAt(Vec3f(1.0f, 1.0f, 4.0f), Vec3f(0.0f, 0.0f, 0.0f), Vec3f(0.0f, 1.0f, 0.0f));
+
+    // Force individual getter paths before toGpu (the S1 regression path).
+    [[maybe_unused]] Mat4f v = cam.getViewMatrix();
+    [[maybe_unused]] Mat4f p = cam.getProjectionMatrix();
+
+    auto gpu = cam.toGpu();
+
+    auto col4ToMat = [](const Float4& c0, const Float4& c1, const Float4& c2, const Float4& c3) {
+        return Mat4f(Vec4f(c0.x, c0.y, c0.z, c0.w),
+                     Vec4f(c1.x, c1.y, c1.z, c1.w),
+                     Vec4f(c2.x, c2.y, c2.z, c2.w),
+                     Vec4f(c3.x, c3.y, c3.z, c3.w));
+    };
+    Mat4f view_gpu = col4ToMat(gpu.view_col0, gpu.view_col1, gpu.view_col2, gpu.view_col3);
+    Mat4f proj_gpu = col4ToMat(gpu.proj_col0, gpu.proj_col1, gpu.proj_col2, gpu.proj_col3);
+    Mat4f vp_gpu = col4ToMat(gpu.view_proj_col0, gpu.view_proj_col1, gpu.view_proj_col2, gpu.view_proj_col3);
+    Mat4f expected = proj_gpu * view_gpu;
+
+    for (std::size_t c = 0; c < 4; ++c) {
+        for (std::size_t r = 0; r < 4; ++r) {
+            EXPECT_NEAR(vp_gpu[c][r], expected[c][r], kTol)
+                << "CameraGpu VP[" << c << "][" << r << "] inconsistent with P*V";
+        }
+    }
 }

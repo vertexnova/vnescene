@@ -11,6 +11,7 @@
 
 #include "vertexnova/scene/camera/orthographic_camera.h"
 #include "vertexnova/scene/camera/camera_gpu.h"
+#include <vertexnova/logging/logging.h>
 #include <vertexnova/math/core/core.h>
 #include <vertexnova/math/projection_utils.h>
 
@@ -26,21 +27,27 @@ constexpr float kHalf = 0.5f;
 constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
 constexpr float kMinSceneScale = 1e-4f;
+constexpr float kMinDimension = 1e-3f;  // Minimum width/height to avoid degenerate projection.
+
+CREATE_VNE_LOGGER_CATEGORY("vnescene.orthographic_camera");
 
 }  // namespace
 
 OrthographicCamera::OrthographicCamera(
     float left, float right, float bottom, float top, float near_plane, float far_plane, std::string name)
     : CameraBase(std::move(name))
-    , left_(left)
-    , right_(right)
-    , bottom_(bottom)
-    , top_(top)
-    , near_plane_(near_plane)
-    , far_plane_(far_plane) {
+    , left_(std::min(left, right - kMinDimension))
+    , right_(std::max(right, left + kMinDimension))
+    , bottom_(std::min(bottom, top - kMinDimension))
+    , top_(std::max(top, bottom + kMinDimension))
+    , near_plane_(std::max(kMinNearPlane, near_plane))
+    , far_plane_(std::max(std::max(kMinNearPlane, near_plane) + kMinFarPlaneOffset, far_plane)) {
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "OrthographicCamera \"" << name_ << "\" created (l=" << left_ << ", r=" << right_
+                 << ", b=" << bottom_ << ", t=" << top_ << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 OrthographicCamera::OrthographicCamera(float width, float height, float near_plane, float far_plane, std::string name)
@@ -54,6 +61,9 @@ OrthographicCamera::OrthographicCamera(float width, float height, float near_pla
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
+    VNE_LOG_INFO << "OrthographicCamera \"" << name_ << "\" created (" << width << "x" << height
+                 << ", near=" << near_plane_ << ", far=" << far_plane_ << ")";
 }
 
 Vec3f OrthographicCamera::getPosition() const noexcept {
@@ -87,7 +97,10 @@ Quatf OrthographicCamera::getOrientation() const noexcept {
 
 void OrthographicCamera::setOrientationView(const Vec3f& position, const Quatf& orientation) noexcept {
     setOrientationViewImpl(position, orientation);
-    updateMatrices();
+    // Only view changed — skip projection recompute.
+    updateViewMatrixImpl();
+    view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    vp_matrix_dirty_ = false;
 }
 
 Vec3f OrthographicCamera::getForwardDir() const noexcept {
@@ -112,6 +125,7 @@ Mat4f OrthographicCamera::getViewMatrix() const noexcept {
 void OrthographicCamera::updateViewMatrixImpl() noexcept {
     view_matrix_ = viewFromQuaternion(graphics_api_, scene_scale_);
     view_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void OrthographicCamera::updateViewMatrix() noexcept {
@@ -128,6 +142,7 @@ Mat4f OrthographicCamera::getProjectionMatrix() const noexcept {
 void OrthographicCamera::updateProjectionMatrixImpl() noexcept {
     projection_matrix_ = Mat4f::ortho(left_, right_, bottom_, top_, near_plane_, far_plane_, graphics_api_);
     projection_matrix_dirty_ = false;
+    vp_matrix_dirty_ = true;
 }
 
 void OrthographicCamera::updateProjectionMatrix() noexcept {
@@ -143,16 +158,26 @@ void OrthographicCamera::setGraphicsApi(GraphicsApi api) noexcept {
 }
 
 Mat4f OrthographicCamera::getViewProjectionMatrix() const noexcept {
-    if (view_matrix_dirty_ || projection_matrix_dirty_) {
+    if (view_matrix_dirty_ || projection_matrix_dirty_ || vp_matrix_dirty_) {
         const_cast<OrthographicCamera*>(this)->updateMatrices();
     }
     return view_projection_matrix_;
 }
 
 void OrthographicCamera::updateMatrices() noexcept {
-    updateViewMatrixImpl();
-    updateProjectionMatrixImpl();
-    view_projection_matrix_ = projection_matrix_ * view_matrix_;
+    const bool need_view = view_matrix_dirty_;
+    const bool need_projection = projection_matrix_dirty_;
+    const bool need_vp_product = vp_matrix_dirty_;
+    if (need_view) {
+        updateViewMatrixImpl();
+    }
+    if (need_projection) {
+        updateProjectionMatrixImpl();
+    }
+    if (need_view || need_projection || need_vp_product) {
+        view_projection_matrix_ = projection_matrix_ * view_matrix_;
+        vp_matrix_dirty_ = false;
+    }
 }
 
 bool OrthographicCamera::isActive() const noexcept {
@@ -212,18 +237,36 @@ void OrthographicCamera::setClipPlanes(float near_plane, float far_plane) noexce
 
 void OrthographicCamera::setBounds(
     float left, float right, float bottom, float top, float near_plane, float far_plane) noexcept {
-    left_ = left;
-    right_ = right;
-    bottom_ = bottom;
-    top_ = top;
+    if (right <= left) {
+        VNE_LOG_WARN << "OrthographicCamera \"" << name_ << "\": setBounds right(" << right << ") <= left(" << left
+                     << "), using centered minimum width";
+        float mid = (left + right) * kHalf;
+        left_ = mid - kMinDimension * kHalf;
+        right_ = mid + kMinDimension * kHalf;
+    } else {
+        left_ = left;
+        right_ = right;
+    }
+    if (top <= bottom) {
+        VNE_LOG_WARN << "OrthographicCamera \"" << name_ << "\": setBounds top(" << top << ") <= bottom(" << bottom
+                     << "), using centered minimum height";
+        float mid = (bottom + top) * kHalf;
+        bottom_ = mid - kMinDimension * kHalf;
+        top_ = mid + kMinDimension * kHalf;
+    } else {
+        bottom_ = bottom;
+        top_ = top;
+    }
     near_plane_ = std::max(kMinNearPlane, near_plane);
     far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
 
 void OrthographicCamera::resize(float width, float height) noexcept {
-    float half_w = width * kHalf;
-    float half_h = height * kHalf;
+    float w = std::max(kMinDimension, width);
+    float h = std::max(kMinDimension, height);
+    float half_w = w * kHalf;
+    float half_h = h * kHalf;
     left_ = -half_w;
     right_ = half_w;
     bottom_ = -half_h;
@@ -240,6 +283,10 @@ void OrthographicCamera::lookAt(const Vec3f& target, const Vec3f& up) noexcept {
 }
 
 void OrthographicCamera::setSceneScale(float scale) noexcept {
+    if (scale <= 0.0f) {
+        VNE_LOG_WARN << "OrthographicCamera \"" << name_ << "\": setSceneScale(" << scale << ") <= 0, clamped to "
+                     << kMinSceneScale;
+    }
     // Clamp to a small positive minimum to avoid singular or axis-flipped view matrices.
     scene_scale_ = std::max(kMinSceneScale, scale);
     view_matrix_dirty_ = true;
