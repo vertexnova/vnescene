@@ -24,7 +24,6 @@ using namespace vne::math;
 namespace {
 
 constexpr float kHalf = 0.5f;
-constexpr float kMinNearPlane = 0.001f;
 constexpr float kMinFarPlaneOffset = 0.1f;
 constexpr float kMinSceneScale = 1e-4f;
 constexpr float kMinDimension = 1e-3f;  // Minimum width/height to avoid degenerate projection.
@@ -40,8 +39,8 @@ OrthographicCamera::OrthographicCamera(
     , right_(std::max(right, left + kMinDimension))
     , bottom_(std::min(bottom, top - kMinDimension))
     , top_(std::max(top, bottom + kMinDimension))
-    , near_plane_(std::max(kMinNearPlane, near_plane))
-    , far_plane_(std::max(std::max(kMinNearPlane, near_plane) + kMinFarPlaneOffset, far_plane)) {
+    , near_plane_(near_plane)
+    , far_plane_(std::max(near_plane + kMinFarPlaneOffset, far_plane)) {
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -217,7 +216,7 @@ void OrthographicCamera::setTop(float top) noexcept {
 }
 
 void OrthographicCamera::setNearPlane(float near_plane) noexcept {
-    near_plane_ = std::max(kMinNearPlane, near_plane);
+    near_plane_ = near_plane;
     if (near_plane_ >= far_plane_) {
         far_plane_ = near_plane_ + 1.0f;
     }
@@ -230,7 +229,7 @@ void OrthographicCamera::setFarPlane(float far_plane) noexcept {
 }
 
 void OrthographicCamera::setClipPlanes(float near_plane, float far_plane) noexcept {
-    near_plane_ = std::max(kMinNearPlane, near_plane);
+    near_plane_ = near_plane;
     far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
@@ -257,7 +256,7 @@ void OrthographicCamera::setBounds(
         bottom_ = bottom;
         top_ = top;
     }
-    near_plane_ = std::max(kMinNearPlane, near_plane);
+    near_plane_ = near_plane;
     far_plane_ = std::max(near_plane_ + kMinFarPlaneOffset, far_plane);
     projection_matrix_dirty_ = true;
 }
