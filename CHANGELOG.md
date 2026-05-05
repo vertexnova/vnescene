@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0](https://github.com/vertexnova/vnescene/compare/v1.4.1...v1.5.0) (2026-05-05)
+
+
+### Features
+
+* Add standalone installation option for vnescene ([#18](https://github.com/vertexnova/vnescene/issues/18)) ([f26c755](https://github.com/vertexnova/vnescene/commit/f26c755cc6383975de284794064ed3957f9fb99c))
+
 ## [1.4.1](https://github.com/vertexnova/vnescene/compare/v1.4.0...v1.4.1) (2026-05-05)
 
 
