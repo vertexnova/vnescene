@@ -73,10 +73,10 @@ target_link_libraries(vnescene
 )
 
 if(TARGET vne::common)
-    target_link_libraries(vnescene PUBLIC vne::common)
+    target_link_libraries(vnescene PRIVATE vne::common)
 endif()
 if(TARGET vne::logging)
-    target_link_libraries(vnescene PUBLIC vne::logging)
+    target_link_libraries(vnescene PRIVATE vne::logging)
 endif()
 
 target_compile_features(vnescene PUBLIC cxx_std_20)
