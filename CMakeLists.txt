@@ -43,6 +43,18 @@ list(APPEND CMAKE_MODULE_PATH "${VNECMAKE_MODULES}")
 
 include(ProjectSetup)
 
+# Standalone release tarball: bundle PIC-static vnemath/vnelogging into libvnescene, skip
+# dep install() rules, and install bundled math + common headers under the vnescene prefix.
+# Must be declared before internal deps (skip-install + lib types apply to add_subdirectory).
+option(VNE_SCENE_STANDALONE_INSTALL
+    "Bundle internal deps into vnescene; skip separate dep installs (release tarball layout)"
+    OFF)
+if(VNE_SCENE_STANDALONE_INSTALL)
+    set(VNE_MATH_SKIP_INSTALL ON CACHE BOOL "Skip VneMath install (vnescene standalone)" FORCE)
+    set(VNE_LOGGING_SKIP_INSTALL ON CACHE BOOL "Skip VneLogging install (vnescene standalone)" FORCE)
+    set(VNE_COMMON_SKIP_INSTALL ON CACHE BOOL "Skip vnecommon install (vnescene standalone)" FORCE)
+endif()
+
 #==============================================================================
 # Platform Detection
 #==============================================================================
@@ -129,7 +141,11 @@ function(_vnescene_configure_vnelogging_dep)
     # Align internal deps with vnescene: shared vnescene needs shared vnelogging on Linux
     # (non-PIC static .a into .so fails); static vnescene (e.g. iOS) must avoid shared
     # intermediates or Xcode requires signing for each dylib target.
-    if(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
+    # Standalone install: use static PIC vnelogging folded into libvnescene (see POSITION_INDEPENDENT_CODE below).
+    if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
+        set(VNE_LOGGING_LIB_TYPE "static" CACHE STRING
+            "VneLogging library type (vnescene standalone: static into shared vnescene)" FORCE)
+    elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
         set(VNE_LOGGING_LIB_TYPE "shared" CACHE STRING
             "VneLogging library type (vnescene sets shared when VNE_SCENE_LIB_TYPE is shared)" FORCE)
     elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "static")
@@ -164,7 +180,11 @@ _vnescene_configure_vnelogging_dep()
 function(_vnescene_configure_vnemath_dep)
     set(VNE_MATH_TESTS OFF CACHE BOOL "Build vnemath test suite (OFF when used as dep of vnescene)" FORCE)
     # VneMath defaults to shared; force static when vnescene is static (see vnelogging above).
-    if(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
+    # Standalone install: static PIC vnemath folded into shared libvnescene.
+    if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
+        set(VNE_MATH_LIB_TYPE "static" CACHE STRING
+            "VneMath library type (vnescene standalone: static into shared vnescene)" FORCE)
+    elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "shared")
         set(VNE_MATH_LIB_TYPE "shared" CACHE STRING
             "VneMath library type (vnescene sets shared when VNE_SCENE_LIB_TYPE is shared)" FORCE)
     elseif(VNE_SCENE_LIB_TYPE_FOR_DEPS STREQUAL "static")
@@ -206,6 +226,16 @@ function(_vnescene_configure_vnemath_dep)
     endif()
 endfunction()
 _vnescene_configure_vnemath_dep()
+
+# ELF/macOS: link PIC static vnemath/vnelogging into shared libvnescene (standalone tarball).
+if(VNE_SCENE_STANDALONE_INSTALL)
+    if(TARGET vnemath)
+        set_target_properties(vnemath PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+    if(TARGET vnelogging)
+        set_target_properties(vnelogging PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+endif()
 
 # Include dirs and config
 set(VNE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
@@ -390,14 +420,84 @@ endif()
 #==============================================================================
 # Installation
 # Use COMPONENT vnescene so that `cmake --install . --component vnescene`
-# installs only this library — not the internal deps (vnecommon, vnelogging)
-# which register their own install() rules via add_subdirectory.
+# installs only this project’s rules. With VNE_SCENE_STANDALONE_INSTALL, dep
+# install() is skipped and math/common headers are installed here.
 #
-# Note: find_package(VneScene) uses FindVneScene.cmake (MODULE mode).
+# find_package(VneScene) uses the generated FindVneScene.cmake (MODULE mode).
 # Set CMAKE_PREFIX_PATH to the install prefix, and CMAKE_MODULE_PATH to
 # include ${CMAKE_INSTALL_PREFIX}/lib/cmake/VneScene for discovery.
 #==============================================================================
 include(GNUInstallDirs)
+
+if(VNE_SCENE_STANDALONE_INSTALL)
+    set(FIND_VNESCENE_FIND_MATH "")
+    set(FIND_VNESCENE_INTERFACE_LINK_LIBS "Threads::Threads")
+else()
+    set(FIND_VNESCENE_FIND_MATH "find_package(VneMath REQUIRED)")
+    set(FIND_VNESCENE_INTERFACE_LINK_LIBS "vne::math;Threads::Threads")
+endif()
+configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/FindVneScene.cmake.in"
+    "${CMAKE_BINARY_DIR}/FindVneScene.cmake"
+    @ONLY
+)
+
+# vnemath source tree for bundling public + internal headers (same layout as VneMath install).
+set(_VNE_STANDALONE_VNEMATH_SRC "")
+if(EXISTS "${VNE_DEPS_INTERNAL_DIR}/vnemath/CMakeLists.txt")
+    set(_VNE_STANDALONE_VNEMATH_SRC "${VNE_DEPS_INTERNAL_DIR}/vnemath")
+elseif(EXISTS "${VNE_DEPS_EXTERNAL_DIR}/vnemath/CMakeLists.txt")
+    set(_VNE_STANDALONE_VNEMATH_SRC "${VNE_DEPS_EXTERNAL_DIR}/vnemath")
+endif()
+if(_VNE_STANDALONE_VNEMATH_SRC STREQUAL "")
+    get_filename_component(_VNE_STANDALONE_VNEMATH_SRC "${PROJECT_SOURCE_DIR}/../vnemath" ABSOLUTE)
+    if(NOT EXISTS "${_VNE_STANDALONE_VNEMATH_SRC}/CMakeLists.txt")
+        set(_VNE_STANDALONE_VNEMATH_SRC "")
+    endif()
+endif()
+set(_VNE_STANDALONE_VNEMATH_BUILD "${CMAKE_BINARY_DIR}/deps/internal/vnemath")
+if(NOT EXISTS "${_VNE_STANDALONE_VNEMATH_BUILD}/config.h")
+    if(EXISTS "${CMAKE_BINARY_DIR}/deps/external/vnemath/config.h")
+        set(_VNE_STANDALONE_VNEMATH_BUILD "${CMAKE_BINARY_DIR}/deps/external/vnemath")
+    elseif(EXISTS "${CMAKE_BINARY_DIR}/vnemath/config.h")
+        set(_VNE_STANDALONE_VNEMATH_BUILD "${CMAKE_BINARY_DIR}/vnemath")
+    endif()
+endif()
+
+# vnemath nested project() (see deps/internal/vnemath/src/CMakeLists.txt) does not leave a stable
+# config.h path; generate one from vnemath's config.h.in for the standalone install tree.
+set(_VNE_STANDALONE_MATH_CONFIG "${CMAKE_BINARY_DIR}/vnescene_vnemath_bundled_config.h")
+if(VNE_SCENE_STANDALONE_INSTALL AND _VNE_STANDALONE_VNEMATH_SRC)
+    set(_vb_src "${CMAKE_SOURCE_DIR}")
+    set(_vb_proj "${CMAKE_PROJECT_NAME}")
+    set(_vb_pmaj "${PROJECT_VERSION_MAJOR}")
+    set(_vb_pmin "${PROJECT_VERSION_MINOR}")
+    set(_vb_ptch "${PROJECT_VERSION_PATCH}")
+    set(_vb_pver "${PROJECT_VERSION}")
+    set(_vb_vne_inc "${VNE_INCLUDE_DIR}")
+    set(_vb_vne_src "${VNE_SRC_DIR}")
+    set(CMAKE_SOURCE_DIR "${_VNE_STANDALONE_VNEMATH_SRC}")
+    set(CMAKE_PROJECT_NAME "vnemath")
+    set(PROJECT_VERSION_MAJOR 1)
+    set(PROJECT_VERSION_MINOR 0)
+    set(PROJECT_VERSION_PATCH 0)
+    set(PROJECT_VERSION "1.0.0")
+    set(VNE_INCLUDE_DIR "${_VNE_STANDALONE_VNEMATH_SRC}/include")
+    set(VNE_SRC_DIR "${_VNE_STANDALONE_VNEMATH_SRC}/src")
+    configure_file(
+        "${_VNE_STANDALONE_VNEMATH_SRC}/configs/config.h.in"
+        "${_VNE_STANDALONE_MATH_CONFIG}"
+        @ONLY
+    )
+    set(CMAKE_SOURCE_DIR "${_vb_src}")
+    set(CMAKE_PROJECT_NAME "${_vb_proj}")
+    set(PROJECT_VERSION_MAJOR "${_vb_pmaj}")
+    set(PROJECT_VERSION_MINOR "${_vb_pmin}")
+    set(PROJECT_VERSION_PATCH "${_vb_ptch}")
+    set(PROJECT_VERSION "${_vb_pver}")
+    set(VNE_INCLUDE_DIR "${_vb_vne_inc}")
+    set(VNE_SRC_DIR "${_vb_vne_src}")
+endif()
 
 install(TARGETS vnescene SceneWarnings SceneBuildSettings
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -415,7 +515,31 @@ install(DIRECTORY src/vertexnova/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertex
 install(FILES ${CMAKE_BINARY_DIR}/config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova/scene
     COMPONENT vnescene)
 
-install(FILES cmake/FindVneScene.cmake
+if(VNE_SCENE_STANDALONE_INSTALL)
+    if(_VNE_STANDALONE_VNEMATH_SRC)
+        install(DIRECTORY "${_VNE_STANDALONE_VNEMATH_SRC}/include/vertexnova/"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/vertexnova"
+            COMPONENT vnescene
+            FILES_MATCHING PATTERN "*.h")
+        install(DIRECTORY "${_VNE_STANDALONE_VNEMATH_SRC}/src/vertexnova/"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/vertexnova"
+            COMPONENT vnescene
+            FILES_MATCHING PATTERN "*.h")
+    endif()
+    if(EXISTS "${_VNE_STANDALONE_MATH_CONFIG}")
+        install(FILES "${_VNE_STANDALONE_MATH_CONFIG}"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/vertexnova/math"
+            RENAME config.h
+            COMPONENT vnescene)
+    endif()
+    if(EXISTS "${VNE_DEPS_INTERNAL_DIR}/vnecommon/include/")
+        install(DIRECTORY "${VNE_DEPS_INTERNAL_DIR}/vnecommon/include/"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+            COMPONENT vnescene)
+    endif()
+endif()
+
+install(FILES "${CMAKE_BINARY_DIR}/FindVneScene.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/VneScene
     COMPONENT vnescene
 )

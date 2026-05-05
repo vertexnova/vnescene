@@ -72,10 +72,10 @@ jobs:
 
   # --------------------------------------------------------------------
   # Stage 2: Build and publish artifacts (only when a release was created this run).
-  # Aligns with vneio: same platform matrix, build/shared/Release (static iOS in
-  # build/static/Release), full `cmake --install` (no --component) so dependency
-  # shared libraries (vnemath, vnelogging, vnecommon) and LICENSE/CHANGELOG.md land
-  # in the tarball (see root install rules in CMakeLists.txt).
+  # Same platform matrix as vneio: build/shared/Release (static iOS in
+  # build/static/Release). Uses -DVNE_SCENE_STANDALONE_INSTALL=ON: PIC-static
+  # internal deps are linked into libvnescene; cmake --install stages vnescene-only
+  # (bundled math/common headers, no separate dep libs or FindVneMath packages).
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
@@ -175,6 +175,7 @@ jobs:
               -DVNE_SCENE_CI=ON \
               -DVNE_SCENE_LIB_TYPE=shared \
               -DVNE_SCENE_TESTS=OFF \
+              -DVNE_SCENE_STANDALONE_INSTALL=ON \
               -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
           else
@@ -183,6 +184,7 @@ jobs:
               -DVNE_SCENE_CI=ON \
               -DVNE_SCENE_LIB_TYPE=shared \
               -DVNE_SCENE_TESTS=OFF \
+              -DVNE_SCENE_STANDALONE_INSTALL=ON \
               -DENABLE_IPO=OFF \
               -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
@@ -209,6 +211,7 @@ jobs:
             -DVNE_SCENE_CI=ON \
             -DVNE_SCENE_LIB_TYPE=shared \
             -DVNE_SCENE_TESTS=OFF \
+            -DVNE_SCENE_STANDALONE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
@@ -224,6 +227,7 @@ jobs:
             -DVNE_SCENE_CI=ON \
             -DVNE_SCENE_LIB_TYPE=shared \
             -DVNE_SCENE_TESTS=OFF \
+            -DVNE_SCENE_STANDALONE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
@@ -244,6 +248,7 @@ jobs:
             -DVNE_SCENE_CI=ON \
             -DVNE_SCENE_LIB_TYPE=static \
             -DVNE_SCENE_TESTS=OFF \
+            -DVNE_SCENE_STANDALONE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
@@ -264,7 +269,7 @@ jobs:
           set -e
           BDIR="${{ matrix.build_dir }}"
           WS="${{ github.workspace }}"
-          # Full install (all components): vnescene plus bundled deps — shared libs consumers need.
+          # Standalone layout: vnescene library + headers (deps skipped at install; math/common bundled).
           if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
             cmake --install "$BDIR" --config Release --verbose
           else
@@ -299,14 +304,11 @@ jobs:
               fi
               ;;
             *)
-              # Require real shared/import library files — not headers, CMake metadata, or LICENSE.
+              # Require vnescene shared/import library only (internal deps linked in; no separate dep libs).
               if [ -z "$(find "$INSTALL" -type f \( \
-                  \( -iname '*vnescene*.so' -o -iname '*vnescene*.dylib' -o -iname '*vnescene*.dll' -o -iname '*vnescene*.lib' \) -o \
-                  \( -iname '*vnemath*.so' -o -iname '*vnemath*.dylib' -o -iname '*vnemath*.dll' -o -iname '*vnemath*.lib' \) -o \
-                  \( -iname '*vnelogging*.so' -o -iname '*vnelogging*.dylib' -o -iname '*vnelogging*.dll' -o -iname '*vnelogging*.lib' \) -o \
-                  \( -iname '*vnecommon*.so' -o -iname '*vnecommon*.dylib' -o -iname '*vnecommon*.dll' -o -iname '*vnecommon*.lib' \) \
+                  -iname '*vnescene*.so' -o -iname '*vnescene*.dylib' -o -iname '*vnescene*.dll' -o -iname '*vnescene*.lib' \
                 \) -print -quit)" ]; then
-                echo "::error::No vnescene / dependency library binaries (.so/.dylib/.dll/.lib) found under install/ (full install should include shared deps)."
+                echo "::error::No vnescene library binary (.so/.dylib/.dll/.lib) found under install/."
                 find "$INSTALL" -type f | sort
                 exit 1
               fi
