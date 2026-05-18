@@ -63,29 +63,36 @@ target_include_directories(vnescene
         $<INSTALL_INTERFACE:include>
 )
 
+# vne::math / vne::logging: PUBLIC for static or non-standalone (.a consumers need transitive
+# link). PRIVATE when folded into shared libvnescene (VNE_SCENE_STANDALONE_INSTALL + shared).
+# vne::common stays PUBLIC (vertexnova/common required by vnemath headers in the build tree).
+if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE STREQUAL "shared")
+    set(_VNE_SCENE_INTERNAL_DEP_SCOPE PRIVATE)
+else()
+    set(_VNE_SCENE_INTERNAL_DEP_SCOPE PUBLIC)
+endif()
+
 target_link_libraries(vnescene
     PUBLIC
         vne::scene::Warnings
         vne::scene::BuildSettings
+    ${_VNE_SCENE_INTERNAL_DEP_SCOPE}
         vne::math
     PRIVATE
         Threads::Threads
 )
 
-# vne::logging: PUBLIC for static/non-standalone (transitive link for .a consumers); PRIVATE when
-# folded into shared libvnescene (VNE_SCENE_STANDALONE_INSTALL + shared). vne::common stays PUBLIC
-# so build-tree consumers get vertexnova/common includes required by vnemath headers.
-if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE STREQUAL "shared")
-    set(_VNE_SCENE_LOGGING_LINK_SCOPE PRIVATE)
-else()
-    set(_VNE_SCENE_LOGGING_LINK_SCOPE PUBLIC)
+# Standalone shared: no transitive link to vnemath, but scene headers still pull in math includes.
+if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE STREQUAL "shared" AND TARGET vne::math)
+    target_include_directories(vnescene SYSTEM PUBLIC
+        $<BUILD_INTERFACE:$<TARGET_PROPERTY:vne::math,INTERFACE_INCLUDE_DIRECTORIES>>)
 endif()
 
 if(TARGET vne::common)
     target_link_libraries(vnescene PUBLIC vne::common)
 endif()
 if(TARGET vne::logging)
-    target_link_libraries(vnescene ${_VNE_SCENE_LOGGING_LINK_SCOPE} vne::logging)
+    target_link_libraries(vnescene ${_VNE_SCENE_INTERNAL_DEP_SCOPE} vne::logging)
 endif()
 
 target_compile_features(vnescene PUBLIC cxx_std_20)
