@@ -72,20 +72,20 @@ target_link_libraries(vnescene
         Threads::Threads
 )
 
-# PUBLIC when vnescene is static or non-standalone: consumers must link transitive deps (static .a
-# does not resolve downstream). PRIVATE only when deps are folded into a shared libvnescene
-# (VNE_SCENE_STANDALONE_INSTALL + shared).
+# vne::logging: PUBLIC for static/non-standalone (transitive link for .a consumers); PRIVATE when
+# folded into shared libvnescene (VNE_SCENE_STANDALONE_INSTALL + shared). vne::common stays PUBLIC
+# so build-tree consumers get vertexnova/common includes required by vnemath headers.
 if(VNE_SCENE_STANDALONE_INSTALL AND VNE_SCENE_LIB_TYPE STREQUAL "shared")
-    set(_VNE_SCENE_INTERNAL_DEP_SCOPE PRIVATE)
+    set(_VNE_SCENE_LOGGING_LINK_SCOPE PRIVATE)
 else()
-    set(_VNE_SCENE_INTERNAL_DEP_SCOPE PUBLIC)
+    set(_VNE_SCENE_LOGGING_LINK_SCOPE PUBLIC)
 endif()
 
 if(TARGET vne::common)
-    target_link_libraries(vnescene ${_VNE_SCENE_INTERNAL_DEP_SCOPE} vne::common)
+    target_link_libraries(vnescene PUBLIC vne::common)
 endif()
 if(TARGET vne::logging)
-    target_link_libraries(vnescene ${_VNE_SCENE_INTERNAL_DEP_SCOPE} vne::logging)
+    target_link_libraries(vnescene ${_VNE_SCENE_LOGGING_LINK_SCOPE} vne::logging)
 endif()
 
 target_compile_features(vnescene PUBLIC cxx_std_20)
