@@ -37,11 +37,27 @@ find_package_handle_standard_args(VneScene
 
 if(VneScene_FOUND AND NOT TARGET vne::scene)
     add_library(vne::scene UNKNOWN IMPORTED)
+    set(_vnescene_iface_defs "")
+    if(WIN32)
+        find_file(VneScene_RUNTIME_DLL
+            NAMES vnescene.dll
+            PATHS
+                "${CMAKE_INSTALL_PREFIX}/bin"
+                "${CMAKE_INSTALL_PREFIX}/lib"
+            NO_DEFAULT_PATH)
+        if(VneScene_RUNTIME_DLL)
+            set(_vnescene_iface_defs "VNE_SCENE_DLL")
+        endif()
+    endif()
     set_target_properties(vne::scene PROPERTIES
         IMPORTED_LOCATION "${VneScene_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${VneScene_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "@FIND_VNESCENE_INTERFACE_LINK_LIBS@"
     )
+    if(_vnescene_iface_defs)
+        set_target_properties(vne::scene PROPERTIES
+            INTERFACE_COMPILE_DEFINITIONS "${_vnescene_iface_defs}")
+    endif()
 endif()
 
 mark_as_advanced(VneScene_INCLUDE_DIR VneScene_LIBRARY)
