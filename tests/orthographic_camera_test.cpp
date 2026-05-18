@@ -112,9 +112,9 @@ TEST(OrthographicCameraTest, SetFarPlane_EnforcesOffsetFromNear) {
 
 TEST(OrthographicCameraTest, SetClipPlanes_AllowsNegativeNearAndEnforcesFarOffset) {
     OrthographicCamera cam = makeOrtho();
-    cam.setClipPlanes(-100.0f, -50.0f);
+    cam.setClipPlanes(-100.0f, -100.0f);
     EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
-    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+    EXPECT_NEAR(cam.getFarPlane(), -99.9f, kTol);
 }
 
 //==============================================================================
@@ -208,9 +208,9 @@ TEST(OrthographicCameraTest, SetOrientationView_RoundTripOrientation) {
 
 TEST(OrthographicCameraTest, SetBounds_AllowsNegativeNearAndEnforcesFarOffset) {
     OrthographicCamera cam = makeOrtho();
-    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, -100.0f, -50.0f);
+    cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, -100.0f, -100.0f);
     EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
-    EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+    EXPECT_NEAR(cam.getFarPlane(), -99.9f, kTol);
 }
 
 TEST(OrthographicCameraTest, SetBounds_NearEqualsFar_FarIsAdjusted) {
