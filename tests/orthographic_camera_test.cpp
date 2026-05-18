@@ -63,6 +63,12 @@ TEST(OrthographicCameraTest, ConstructFromWidthHeight_CentersBounds) {
     EXPECT_NEAR(cam.getHeight(), 300.0f, kTol);
 }
 
+TEST(OrthographicCameraTest, ConstructFromWidthHeight_EnforcesFarOffsetWhenNearEqualsFar) {
+    OrthographicCamera cam(400.0f, 300.0f, -100.0f, -100.0f);
+    EXPECT_NEAR(cam.getNearPlane(), -100.0f, kTol);
+    EXPECT_NEAR(cam.getFarPlane(), -99.9f, kTol);
+}
+
 //==============================================================================
 // resize (centered bounds)
 //==============================================================================
@@ -108,6 +114,14 @@ TEST(OrthographicCameraTest, SetFarPlane_EnforcesOffsetFromNear) {
     cam.setNearPlane(1.0f);
     cam.setFarPlane(1.05f);
     EXPECT_GE(cam.getFarPlane(), cam.getNearPlane() + 0.1f);
+}
+
+TEST(OrthographicCameraTest, SetNearPlane_EnforcesMinFarOffsetWhenNearCrossesFar) {
+    OrthographicCamera cam = makeOrtho();
+    cam.setClipPlanes(0.1f, 0.5f);
+    cam.setNearPlane(1.0f);
+    EXPECT_NEAR(cam.getNearPlane(), 1.0f, kTol);
+    EXPECT_NEAR(cam.getFarPlane(), 1.1f, kTol);
 }
 
 TEST(OrthographicCameraTest, SetClipPlanes_AllowsNegativeNearAndEnforcesFarOffset) {
@@ -216,7 +230,8 @@ TEST(OrthographicCameraTest, SetBounds_AllowsNegativeNearAndEnforcesFarOffset) {
 TEST(OrthographicCameraTest, SetBounds_NearEqualsFar_FarIsAdjusted) {
     OrthographicCamera cam = makeOrtho();
     cam.setBounds(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 1.0f);
-    EXPECT_GT(cam.getFarPlane(), cam.getNearPlane());
+    EXPECT_NEAR(cam.getNearPlane(), 1.0f, kTol);
+    EXPECT_NEAR(cam.getFarPlane(), 1.1f, kTol);
 }
 
 //==============================================================================

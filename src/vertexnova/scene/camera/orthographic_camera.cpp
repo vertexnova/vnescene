@@ -56,7 +56,7 @@ OrthographicCamera::OrthographicCamera(float width, float height, float near_pla
     , bottom_(-height * kHalf)
     , top_(height * kHalf)
     , near_plane_(near_plane)
-    , far_plane_(far_plane) {
+    , far_plane_(std::max(near_plane + kMinFarPlaneOffset, far_plane)) {
     updateViewMatrixImpl();
     updateProjectionMatrixImpl();
     view_projection_matrix_ = projection_matrix_ * view_matrix_;
@@ -218,7 +218,7 @@ void OrthographicCamera::setTop(float top) noexcept {
 void OrthographicCamera::setNearPlane(float near_plane) noexcept {
     near_plane_ = near_plane;
     if (near_plane_ >= far_plane_) {
-        far_plane_ = near_plane_ + 1.0f;
+        far_plane_ = near_plane_ + kMinFarPlaneOffset;
     }
     projection_matrix_dirty_ = true;
 }
